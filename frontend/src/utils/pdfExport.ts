@@ -1,4 +1,4 @@
-export async function exportToPDF(_elementId: string, filename = 'resume') {
+export async function exportToPDF(_elementId: string, _filename = 'resume') {
   // Inject a one-time print stylesheet that hides everything except the resume
   const styleId = '__resume_print_style__';
   let style = document.getElementById(styleId) as HTMLStyleElement | null;
