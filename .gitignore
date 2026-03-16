@@ -1,0 +1,33 @@
+# Python
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.env
+*.env
+
+# Database (contains personal resume data)
+backend/resume_builder.db
+*.db
+*.sqlite
+
+# Generated output (PDFs, exports)
+output/
+*.pdf
+*.PDF
+
+# Sample/personal resume files
+samples/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude memory (local only)
+.claude/projects/
