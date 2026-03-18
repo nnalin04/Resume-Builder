@@ -1,13 +1,26 @@
 # AI Resume Builder — Claude Code Instructions
 
 ## Project Overview
-Skill-driven AI Resume Builder. All resume workflows are managed through Claude skills.
+AI Resume Builder SaaS — production-ready with auth, freemium payments (Cashfree), multi-user support.
+Skill-driven workflows managed through Claude skills.
+
+## Production Stack
+| Component | Tech | Notes |
+|-----------|------|-------|
+| Backend | FastAPI (Python) | JWT auth, Cashfree payments, freemium |
+| Frontend | React + Vite | React Router, auth context, pricing page |
+| Database | SQLite → PostgreSQL | Add user_id to all resume rows |
+| AI | Gemini 2.5 Flash | Free tier covers ~1,000 req/day |
+| PDF | reportlab (backend) / window.print() (frontend) | |
+| Payments | Cashfree (1.6% promo — sign up before March 31, 2026!) | |
+| Hosting | Oracle Cloud Free ARM + Cloudflare Pages | |
 
 ## Backend
-- **FastAPI** on `http://localhost:8000` (Python, SQLite, reportlab, spaCy)
-- **Start**: `./run_app.sh` — starts backend + Next.js frontend
+- **FastAPI** on `http://localhost:8000` (Python, SQLite, reportlab)
+- **Start**: `./run_app.sh` — starts backend + Vite frontend
 - **Backend only**: `cd backend && source venv/bin/activate && uvicorn main:app --port 8000`
 - **Health check**: `curl http://localhost:8000/`
+- **Install deps**: `cd backend && pip install -r requirements.txt`
 
 ## Available Skills
 
@@ -63,11 +76,50 @@ Always use skills for resume operations. Never call the backend API directly unl
 - `technical` — Helvetica, skills-first, green accents (engineering/DevOps)
 
 ## Key Files
+- `backend/main.py` — all FastAPI routes (auth + payments + resume + export)
+- `backend/auth.py` — JWT creation/verification, password hashing, Google OAuth exchange
+- `backend/payment.py` — Cashfree order creation, verification, webhook handler
+- `backend/models.py` — User, Resume, GeneratedResume, Payment, Subscription models
 - `backend/resume_parser_ai.py` — PDF text → structured JSON sections
 - `backend/resume_generator.py` — ATS optimization + bullet strengthening
 - `backend/pdf_generator.py` — reportlab PDF export (3 templates)
 - `backend/ats_scorer.py` — spaCy keyword overlap scoring
-- `backend/main.py` — all FastAPI routes
+- `backend/.env` — all secrets (NEVER commit to git)
+
+## Auth Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/auth/register` | POST | Email/password registration |
+| `/api/auth/login` | POST | Email/password login |
+| `/api/auth/google` | POST | Google OAuth code exchange |
+| `/api/auth/me` | GET | Get current user (Bearer token) |
+
+## Payment Endpoints
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/payments/plans` | GET | List pricing plans |
+| `/api/payments/create-order` | POST | Create Cashfree payment order |
+| `/api/payments/verify?order_id=X` | POST | Verify + activate after payment |
+| `/api/payments/webhook` | POST | Cashfree webhook handler |
+
+## Freemium Logic
+- **Free tier**: 1 PDF download per user (tracked in `users.free_downloads_used`)
+- **After free download**: `/api/export/{id}?format=pdf` returns HTTP 402 with `{ code: "PAYMENT_REQUIRED" }`
+- **Frontend**: catches 402 and redirects to `/pricing`
+- **Plans**: ₹199 one-time, ₹399/mo basic, ₹649/mo pro
+- **URGENT**: Sign up for Cashfree before **March 31, 2026** for 1.6% promotional rate
+
+## Frontend Architecture (React + Vite)
+Key files:
+- `frontend/src/App.tsx` — BrowserRouter, AuthProvider, all routes
+- `frontend/src/contexts/AuthContext.tsx` — user state, login/logout, token management
+- `frontend/src/api/client.ts` — typed API wrapper (auth + payments + resumes)
+- `frontend/src/pages/LoginPage.tsx` — email/password + Google OAuth login
+- `frontend/src/pages/RegisterPage.tsx` — registration
+- `frontend/src/pages/PricingPage.tsx` — plan selection + Cashfree checkout
+- `frontend/src/pages/PaymentSuccessPage.tsx` — post-payment verification
+- `frontend/src/pages/GoogleCallbackPage.tsx` — OAuth redirect handler
+- `frontend/src/pages/Dashboard.tsx` — main editor (auth-aware, shows upgrade CTA)
 
 ---
 
@@ -172,3 +224,101 @@ gap: '0 8px',
 // date span:
 flexShrink: 0,
 ```
+
+---
+
+## Agents (`.claude/agents/`)
+
+| Agent | When to use |
+|-------|-------------|
+| `architect` | Designing new feature architecture (payments, auth flows, DB schema) |
+| `reviewer` | Review PRs / changed files for correctness |
+| `security-engineer` | OWASP review of auth, payments, API security |
+| `planner` | Planning complex multi-file features |
+| `devops-engineer` | Docker, deployment, Oracle Cloud, Cloudflare setup |
+| `build-error-resolver` | Fix pip/npm build failures |
+| `qa-tester` | Write + run test cases |
+
+## Commands (`.claude/commands/`)
+
+| Command | Purpose |
+|---------|---------|
+| `/code-review` | Spawn reviewer on changed files |
+| `/plan` | Plan a complex feature |
+| `/deploy` | Guided deployment checklist |
+| `/health-check` | Verify all services are healthy |
+| `/quality-gate` | Full quality check before merge |
+| `/verify` | Verify build + tests pass |
+| `/build-fix` | Fix build errors incrementally |
+
+## Skills (`.claude/skills/`)
+
+### Resume Skills
+| Skill | Trigger |
+|-------|---------|
+| `/resume-generate` | Upload PDF + optional JD → ATS-optimized PDF |
+| `/resume-update` | Edit sections → re-optimize |
+| `/resume-ats` | ATS score + gap analysis |
+| `/resume-coach` | Interactive coaching chat |
+| `/resume-add-template` | Add a new React template |
+| `/resume-frontend` | Frontend UI work |
+| `/resume-html-export` | Export standalone HTML resume |
+
+### Engineering Workflow
+| Skill | Purpose |
+|-------|---------|
+| `/api-design` | Design REST API contracts before writing code |
+| `/api-docs` | Generate OpenAPI 3.0 spec from existing routes |
+| `/backend-patterns` | FastAPI/Python patterns and anti-patterns |
+| `/python-patterns` | Python idioms, async patterns, error handling |
+| `/python-testing` | pytest test writing patterns |
+| `/tdd-workflow` | Test-driven development coaching |
+| `/test-coverage` | Audit + improve test coverage |
+| `/database-migrations` | Safe DB migration patterns (SQLite → Postgres) |
+| `/docker-patterns` | Docker Compose for Oracle Cloud ARM deployment |
+| `/deployment-patterns` | Blue/green, rolling deploy strategies |
+| `/deploy-check` | Pre-deploy checklist — GO/NO-GO decision |
+| `/commit-push` | Stage, commit, push with clean message |
+| `/performance-analysis` | Identify and fix backend/frontend bottlenecks |
+| `/verification-loop` | Verify build + tests pass iteratively |
+
+### Security
+| Skill | Purpose |
+|-------|---------|
+| `/security-audit` | OWASP API Top 10 audit (auth, payments, JWT) |
+| `/security-review` | Focused security review of changed code |
+| `/security-scan` | Automated scan for common vulnerabilities |
+| `/env-audit` | Audit .env files for missing/placeholder secrets |
+
+### AI & Product
+| Skill | Purpose |
+|-------|---------|
+| `/ai-first-engineering` | AI-first dev principles for resume AI features |
+| `/agentic-engineering` | Eval-first, cost-aware model routing |
+| `/prd` | Generate or refine a PRD |
+| `/ui-review` | Review React UI for UX issues |
+
+### Project Management
+| Skill | Purpose |
+|-------|---------|
+| `/pm` | Single entry point that routes all work |
+| `/project-status` | Current project health snapshot |
+| `/standup` | Generate standup report |
+| `/task-board` | View + update task board |
+| `/qa-report` | Generate QA test report |
+| `/release-notes` | Generate release notes from commits |
+| `/retrospective` | Process learnings into memory/patterns |
+| `/rollback` | Guided rollback procedure |
+| `/service-logs` | Tail + analyze backend logs |
+| `/bug-report` | Guided bug documentation + triage |
+
+### Meta (Skill/Agent Management)
+| Skill | Purpose |
+|-------|---------|
+| `/skill-builder` | Create or improve a skill |
+| `/improve` | Targeted rewrite of one skill or agent |
+| `/build-agent` | Create a new agent for a missing role |
+| `/split-skill` | Split an oversized skill (>200 lines) |
+| `/memory` | Store/query cross-session memory |
+| `/code-review` | Spawn reviewer agent on changed files |
+| `/e2e-testing` | E2E test writing patterns |

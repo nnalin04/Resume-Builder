@@ -1,10 +1,26 @@
-fastapi
-uvicorn
-pydantic
-python-multipart
-pdfplumber
-sqlalchemy
-duckduckgo-search
-python-dotenv
-reportlab
-sse-starlette
+fastapi==0.135.1
+google-generativeai==0.8.5
+uvicorn==0.41.0
+pydantic==2.12.5
+pydantic[email]
+pydantic-settings==2.13.1
+python-multipart==0.0.22
+pdfplumber==0.11.9
+SQLAlchemy==2.0.48
+duckduckgo-search==8.1.1
+python-dotenv==1.2.2
+reportlab==4.4.10
+sse-starlette==3.3.2
+slowapi==0.1.9
+alembic==1.18.4
+# spacy — incompatible with Python 3.14 (Pydantic v1 conflict); ATS scorer uses regex fallback
+# Auth
+python-jose[cryptography]==3.5.0
+bcrypt==5.0.0
+# passlib removed — bcrypt backend incompatible with Python 3.14; using bcrypt directly
+httpx==0.28.1
+# Payments
+cashfree-pg>=4.0.0
+
+# Dev / test only — do not install in production
+# pip install pytest pytest-asyncio httpx

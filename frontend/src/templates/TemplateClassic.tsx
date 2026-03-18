@@ -38,7 +38,7 @@ function BulletLines({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills } = data;
+  const { personalInfo: p, summary, experiences, projects, education, skills, certifications } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
@@ -150,6 +150,22 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
                 <div style={{ fontSize: f(10.4), color: '#555', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` — ${edu.field}`}</div>
               </div>
               <div style={{ fontSize: f(10.3), color: '#555', flexShrink: 0, paddingTop: '1px' }}>{edu.year}</div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Certifications */}
+      {certifications && certifications.length > 0 && (
+        <>
+          <SectionTitle title="Certifications" fm={fm} />
+          {certifications.map(cert => (
+            <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
+              <div>
+                <span style={{ fontSize: f(10.9), fontWeight: 600, color: '#0f0f0f', lineHeight: 1.3 }}>{cert.name}</span>
+                {cert.issuer && <span style={{ fontSize: f(10.4), color: '#555', lineHeight: 1.3 }}> — {cert.issuer}</span>}
+              </div>
+              {cert.date && <div style={{ fontSize: f(10.3), color: '#555', flexShrink: 0 }}>{cert.date}</div>}
             </div>
           ))}
         </>

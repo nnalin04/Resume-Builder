@@ -5,52 +5,77 @@ interface Props {
   onAdd: () => void;
   onUpdate: (id: string, field: keyof Experience, value: string | boolean) => void;
   onRemove: (id: string) => void;
+  onRewrite?: (id: string, currentText: string) => void;
+  rewritingId?: string | null;
 }
 
-const inputClass = "w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white";
-const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+const s = {
+  input: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 10px', fontSize: 13, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
+  label: { display: 'block', fontSize: 11, fontWeight: 500, color: '#4b5563', marginBottom: 4 },
+  card: { border: '1px solid #f3f4f6', borderRadius: 8, padding: 12, background: '#f9fafb', marginBottom: 12 },
+  cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  badge: { fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: 1 },
+  removeBtn: { fontSize: 12, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' },
+  grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 },
+  field: { marginBottom: 8 },
+  textarea: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 10px', fontSize: 13, resize: 'none' as const, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
+  addBtn: { width: '100%', padding: '8px 0', border: '2px dashed #93c5fd', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#3b82f6', background: 'none', cursor: 'pointer' },
+  checkRow: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#4b5563', marginBottom: 8, cursor: 'pointer' },
+  rewriteBtn: { fontSize: 12, color: '#4f46e5', background: '#e0e7ff', border: 'none', padding: '2px 6px', borderRadius: 4, cursor: 'pointer', fontWeight: 500 },
+};
 
-export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove }: Props) {
+export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove, onRewrite, rewritingId }: Props) {
   return (
-    <div className="space-y-4">
+    <div>
       {experiences.map((exp, idx) => (
-        <div key={exp.id} className="border border-gray-100 rounded-lg p-3 bg-gray-50 relative">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Position {idx + 1}</span>
-            <button onClick={() => onRemove(exp.id)} className="text-red-400 hover:text-red-600 text-xs">✕ Remove</button>
+        <div key={exp.id} style={s.card}>
+          <div style={s.cardHeader}>
+            <span style={s.badge}>Position {idx + 1}</span>
+            <button onClick={() => onRemove(exp.id)} style={s.removeBtn}>✕ Remove</button>
           </div>
-          <div className="grid grid-cols-2 gap-2 mb-2">
+          <div style={s.grid2}>
             <div>
-              <label className={labelClass}>Company</label>
-              <input className={inputClass} value={exp.company} onChange={e => onUpdate(exp.id, 'company', e.target.value)} placeholder="Company Name" />
+              <label style={s.label}>Company</label>
+              <input style={s.input} value={exp.company} onChange={e => onUpdate(exp.id, 'company', e.target.value)} placeholder="Company Name" />
             </div>
             <div>
-              <label className={labelClass}>Position</label>
-              <input className={inputClass} value={exp.position} onChange={e => onUpdate(exp.id, 'position', e.target.value)} placeholder="Job Title" />
+              <label style={s.label}>Position</label>
+              <input style={s.input} value={exp.position} onChange={e => onUpdate(exp.id, 'position', e.target.value)} placeholder="Job Title" />
             </div>
           </div>
-          <div className="mb-2">
-            <label className={labelClass}>Location</label>
-            <input className={inputClass} value={exp.location} onChange={e => onUpdate(exp.id, 'location', e.target.value)} placeholder="City" />
+          <div style={s.field}>
+            <label style={s.label}>Location</label>
+            <input style={s.input} value={exp.location} onChange={e => onUpdate(exp.id, 'location', e.target.value)} placeholder="City" />
           </div>
-          <div className="grid grid-cols-2 gap-2 mb-2">
+          <div style={s.grid2}>
             <div>
-              <label className={labelClass}>Start Date</label>
-              <input className={inputClass} value={exp.startDate} onChange={e => onUpdate(exp.id, 'startDate', e.target.value)} placeholder="Jan 2022" />
+              <label style={s.label}>Start Date</label>
+              <input style={s.input} value={exp.startDate} onChange={e => onUpdate(exp.id, 'startDate', e.target.value)} placeholder="Jan 2022" />
             </div>
             <div>
-              <label className={labelClass}>End Date</label>
-              <input className={inputClass} value={exp.endDate} onChange={e => onUpdate(exp.id, 'endDate', e.target.value)} placeholder="Dec 2023" disabled={exp.currentlyWorking} />
+              <label style={s.label}>End Date</label>
+              <input style={{ ...s.input, opacity: exp.currentlyWorking ? 0.5 : 1 }} value={exp.endDate} onChange={e => onUpdate(exp.id, 'endDate', e.target.value)} placeholder="Dec 2023" disabled={exp.currentlyWorking} />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-xs text-gray-600 mb-2 cursor-pointer">
-            <input type="checkbox" checked={exp.currentlyWorking} onChange={e => onUpdate(exp.id, 'currentlyWorking', e.target.checked)} className="rounded" />
+          <label style={s.checkRow}>
+            <input type="checkbox" checked={exp.currentlyWorking} onChange={e => onUpdate(exp.id, 'currentlyWorking', e.target.checked)} />
             Currently working here
           </label>
           <div>
-            <label className={labelClass}>Description <span className="text-gray-400">(one bullet per line)</span></label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+               <label style={{...s.label, marginBottom: 0}}>Description <span style={{ color: '#9ca3af' }}>(one bullet per line)</span></label>
+               {onRewrite && (
+                 <button 
+                   onClick={() => onRewrite(exp.id, exp.description)}
+                   disabled={rewritingId === exp.id}
+                   style={s.rewriteBtn}
+                 >
+                   {rewritingId === exp.id ? '✨ Rewriting...' : '✨ Improve Bullets'}
+                 </button>
+               )}
+            </div>
             <textarea
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
+              style={s.textarea}
               rows={5}
               value={exp.description}
               onChange={e => onUpdate(exp.id, 'description', e.target.value)}
@@ -59,9 +84,7 @@ export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove 
           </div>
         </div>
       ))}
-      <button onClick={onAdd} className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 rounded-lg text-sm hover:bg-blue-50 transition-colors font-medium">
-        + Add Experience
-      </button>
+      <button onClick={onAdd} style={s.addBtn}>+ Add Experience</button>
     </div>
   );
 }

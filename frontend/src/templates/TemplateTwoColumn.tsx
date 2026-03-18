@@ -36,7 +36,7 @@ function ArrowBullets({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills } = data;
+  const { personalInfo: p, summary, experiences, projects, education, skills, certifications } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
@@ -180,6 +180,23 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
                   <div style={{ fontSize: f(10.3), color: '#444', lineHeight: 1.4 }}>
                     {edu.degree}{edu.field && `, ${edu.field}`}
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications */}
+          {certifications && certifications.length > 0 && (
+            <div style={{ marginTop: '6px' }}>
+              <ColHeader title="Certifications" fm={fm} />
+              {certifications.map(cert => (
+                <div key={cert.id} style={{ marginBottom: '5px' }}>
+                  <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#111', lineHeight: 1.4 }}>{cert.name}</div>
+                  {(cert.issuer || cert.date) && (
+                    <div style={{ fontSize: f(10.3), color: '#444', lineHeight: 1.4 }}>
+                      {cert.issuer}{cert.issuer && cert.date && ' · '}{cert.date}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

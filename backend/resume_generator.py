@@ -1,14 +1,17 @@
 """
-Local resume generator — zero external API dependencies.
+Resume generator with Gemini 2.5 Flash integration.
 
 Capabilities:
 1. generate_clarifying_questions  — returns targeted questions based on resume gaps
-2. generate_optimized_resume      — rewrites bullets, injects JD keywords, strengthens summary
-3. build_chat_response            — rule-based coaching chat
+2. generate_optimized_resume      — rewrites bullets, injects JD keywords, strengthens summary (Gemini-first, rule-engine fallback)
+3. build_chat_response            — coaching chat (Gemini-first, rule-engine fallback)
 """
 
 import re
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ─── Action verb library ──────────────────────────────────────────────────────
 
@@ -158,9 +161,22 @@ async def generate_optimized_resume(
 ) -> dict:
     """
     Produce an ATS-optimized version of the resume.
-    All transformations are local — no API calls.
+    Tries Gemini 2.5 Flash first; falls back to local rule engine on failure.
     """
     import copy
+
+    # ── Try Gemini first ──────────────────────────────────────────────────────
+    try:
+        from gemini_service import optimize_resume as gemini_optimize
+        result = await gemini_optimize(current_sections, job_description, requirements_prompt)
+        if result and isinstance(result, dict):
+            logger.info("generate_optimized_resume: Gemini response used.")
+            return result
+    except Exception as exc:
+        logger.warning("Gemini optimize_resume failed, falling back to rule engine: %s", exc)
+
+    # ── Rule-engine fallback ──────────────────────────────────────────────────
+    logger.info("generate_optimized_resume: using rule-engine fallback.")
     optimized = copy.deepcopy(current_sections)
 
     jd_keywords = _extract_jd_keywords(job_description) if job_description else []
@@ -308,6 +324,18 @@ async def build_chat_response(
     user_message: str,
     job_description: str,
 ) -> str:
+    # ── Try Gemini first ──────────────────────────────────────────────────────
+    try:
+        from gemini_service import chat_response as gemini_chat
+        result = await gemini_chat(resume_sections, _chat_history, user_message, job_description)
+        if result:
+            logger.info("build_chat_response: Gemini response used.")
+            return result
+    except Exception as exc:
+        logger.warning("Gemini chat_response failed, falling back to rule engine: %s", exc)
+
+    # ── Rule-engine fallback ──────────────────────────────────────────────────
+    logger.info("build_chat_response: using rule-engine fallback.")
     words = set(re.findall(r"\w+", user_message.lower()))
 
     for trigger_set, handler in CHAT_RULES:

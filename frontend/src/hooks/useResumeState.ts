@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { ResumeData, Experience, Project, Education } from '../types/resumeTypes';
+import type { ResumeData, Experience, Project, Education, Certification } from '../types/resumeTypes';
+
+const STORAGE_KEY = 'resume_draft';
 
 const defaultData: ResumeData = {
   personalInfo: {
@@ -57,79 +59,145 @@ const defaultData: ResumeData = {
   ],
   skills:
     'JavaScript, TypeScript, React, Node.js, Python, Docker, Kubernetes, PostgreSQL, Redis, AWS, Git, CI/CD, REST APIs, System Design',
+  certifications: [],
 };
 
-export function useResumeState() {
-  const [resumeData, setResumeData] = useState<ResumeData>(defaultData);
+function loadDraft(): ResumeData {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as ResumeData;
+  } catch {
+    // corrupted storage — fall through to default
+  }
+  return defaultData;
+}
 
-  const updatePersonalInfo = (field: keyof ResumeData['personalInfo'], value: string) => {
-    setResumeData(prev => ({
-      ...prev,
-      personalInfo: { ...prev.personalInfo, [field]: value },
-    }));
+export function useResumeState() {
+  const [resumeData, setResumeData] = useState<ResumeData>(loadDraft);
+  const [isDirty, setIsDirty] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-save to localStorage with 500ms debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resumeData));
+      } catch {
+        // storage quota exceeded — ignore
+      }
+    }, 500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [resumeData]);
+
+  const set = (updater: (prev: ResumeData) => ResumeData) => {
+    setResumeData(updater);
+    setIsDirty(true);
   };
 
-  const updateSummary = (value: string) => setResumeData(prev => ({ ...prev, summary: value }));
-  const updateSkills = (value: string) => setResumeData(prev => ({ ...prev, skills: value }));
+  const clearDraft = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setIsDirty(false);
+  };
+
+  const updatePersonalInfo = (field: keyof ResumeData['personalInfo'], value: string) => {
+    set(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }));
+  };
+
+  const updateSummary = (value: string) => set(prev => ({ ...prev, summary: value }));
+  const updateSkills = (value: string) => set(prev => ({ ...prev, skills: value }));
 
   const addExperience = () => {
     const newExp: Experience = {
       id: uuidv4(), company: '', position: '', location: '',
       startDate: '', endDate: '', currentlyWorking: false, description: '',
     };
-    setResumeData(prev => ({ ...prev, experiences: [...prev.experiences, newExp] }));
+    set(prev => ({ ...prev, experiences: [...prev.experiences, newExp] }));
   };
 
   const updateExperience = (id: string, field: keyof Experience, value: string | boolean) => {
-    setResumeData(prev => ({
+    set(prev => ({
       ...prev,
       experiences: prev.experiences.map(e => e.id === id ? { ...e, [field]: value } : e),
     }));
   };
 
   const removeExperience = (id: string) => {
-    setResumeData(prev => ({ ...prev, experiences: prev.experiences.filter(e => e.id !== id) }));
+    set(prev => ({ ...prev, experiences: prev.experiences.filter(e => e.id !== id) }));
   };
 
   const addProject = () => {
     const newProj: Project = { id: uuidv4(), name: '', description: '', link: '' };
-    setResumeData(prev => ({ ...prev, projects: [...prev.projects, newProj] }));
+    set(prev => ({ ...prev, projects: [...prev.projects, newProj] }));
   };
 
   const updateProject = (id: string, field: keyof Project, value: string) => {
-    setResumeData(prev => ({
+    set(prev => ({
       ...prev,
       projects: prev.projects.map(p => p.id === id ? { ...p, [field]: value } : p),
     }));
   };
 
   const removeProject = (id: string) => {
-    setResumeData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
+    set(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
   };
 
   const addEducation = () => {
     const newEdu: Education = { id: uuidv4(), institution: '', degree: '', field: '', year: '' };
-    setResumeData(prev => ({ ...prev, education: [...prev.education, newEdu] }));
+    set(prev => ({ ...prev, education: [...prev.education, newEdu] }));
   };
 
   const updateEducation = (id: string, field: keyof Education, value: string) => {
-    setResumeData(prev => ({
+    set(prev => ({
       ...prev,
       education: prev.education.map(e => e.id === id ? { ...e, [field]: value } : e),
     }));
   };
 
   const removeEducation = (id: string) => {
-    setResumeData(prev => ({ ...prev, education: prev.education.filter(e => e.id !== id) }));
+    set(prev => ({ ...prev, education: prev.education.filter(e => e.id !== id) }));
   };
+
+  const replaceExperiences = (experiences: Experience[]) =>
+    set(prev => ({ ...prev, experiences }));
+
+  const replaceEducation = (education: Education[]) =>
+    set(prev => ({ ...prev, education }));
+
+  const replaceProjects = (projects: Project[]) =>
+    set(prev => ({ ...prev, projects }));
+
+  const addCertification = () => {
+    const newCert: Certification = { id: uuidv4(), name: '', issuer: '', date: '' };
+    set(prev => ({ ...prev, certifications: [...(prev.certifications ?? []), newCert] }));
+  };
+
+  const updateCertification = (id: string, field: keyof Certification, value: string) => {
+    set(prev => ({
+      ...prev,
+      certifications: (prev.certifications ?? []).map(c => c.id === id ? { ...c, [field]: value } : c),
+    }));
+  };
+
+  const removeCertification = (id: string) => {
+    set(prev => ({ ...prev, certifications: (prev.certifications ?? []).filter(c => c.id !== id) }));
+  };
+
+  const replaceCertifications = (certifications: Certification[]) =>
+    set(prev => ({ ...prev, certifications }));
 
   return {
     resumeData,
+    isDirty,
+    clearDraft,
     updatePersonalInfo,
     updateSummary,
     updateSkills,
-    addExperience, updateExperience, removeExperience,
-    addProject, updateProject, removeProject,
-    addEducation, updateEducation, removeEducation,
+    addExperience, updateExperience, removeExperience, replaceExperiences,
+    addProject, updateProject, removeProject, replaceProjects,
+    addEducation, updateEducation, removeEducation, replaceEducation,
+    addCertification, updateCertification, removeCertification, replaceCertifications,
   };
 }

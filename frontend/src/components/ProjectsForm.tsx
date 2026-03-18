@@ -7,26 +7,29 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-const inputClass = "w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white";
-const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
+const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
+const textareaCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm resize-none bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
 
 export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Props) {
   return (
-    <div className="space-y-4">
+    <div>
       {projects.map((proj, idx) => (
-        <div key={proj.id} className="border border-gray-100 rounded-lg p-3 bg-gray-50">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Project {idx + 1}</span>
-            <button onClick={() => onRemove(proj.id)} className="text-red-400 hover:text-red-600 text-xs">✕ Remove</button>
+        <div key={proj.id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/70 mb-3">
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Project {idx + 1}</span>
+            <button onClick={() => onRemove(proj.id)} className="text-xs text-red-400 bg-transparent border-none cursor-pointer hover:text-red-500 transition-colors">✕ Remove</button>
           </div>
           <div className="mb-2">
-            <label className={labelClass}>Project Name</label>
-            <input className={inputClass} value={proj.name} onChange={e => onUpdate(proj.id, 'name', e.target.value)} placeholder="Project Name" />
+            <label className={labelCls}>Project Name</label>
+            <input className={inputCls} value={proj.name} onChange={e => onUpdate(proj.id, 'name', e.target.value)} placeholder="Project Name" />
           </div>
           <div className="mb-2">
-            <label className={labelClass}>Description <span className="text-gray-400">(one bullet per line)</span></label>
+            <label className={labelCls}>
+              Description <span className="text-slate-400 normal-case tracking-normal font-normal">(one bullet per line)</span>
+            </label>
             <textarea
-              className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
+              className={textareaCls}
               rows={3}
               value={proj.description}
               onChange={e => onUpdate(proj.id, 'description', e.target.value)}
@@ -34,12 +37,12 @@ export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Pr
             />
           </div>
           <div>
-            <label className={labelClass}>Link (optional)</label>
-            <input className={inputClass} value={proj.link} onChange={e => onUpdate(proj.id, 'link', e.target.value)} placeholder="https://..." />
+            <label className={labelCls}>Link (optional)</label>
+            <input className={inputCls} value={proj.link} onChange={e => onUpdate(proj.id, 'link', e.target.value)} placeholder="https://..." />
           </div>
         </div>
       ))}
-      <button onClick={onAdd} className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 rounded-lg text-sm hover:bg-blue-50 transition-colors font-medium">
+      <button onClick={onAdd} className="w-full py-2 border-2 border-dashed border-blue-200 rounded-xl text-sm font-medium text-brand-600 bg-transparent cursor-pointer hover:bg-blue-50 transition-colors">
         + Add Project
       </button>
     </div>

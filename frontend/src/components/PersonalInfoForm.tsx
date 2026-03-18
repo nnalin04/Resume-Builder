@@ -5,39 +5,39 @@ interface Props {
   onChange: (field: keyof PersonalInfo, value: string) => void;
 }
 
-const inputClass = "w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white";
-const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
+const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
 
 export default function PersonalInfoForm({ data, onChange }: Props) {
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="flex flex-col gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label className={labelClass}>Full Name</label>
-          <input className={inputClass} value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="Your Name" />
+          <label className={labelCls}>Full Name</label>
+          <input className={inputCls} value={data.name} onChange={e => onChange('name', e.target.value)} placeholder="Your Name" />
         </div>
         <div>
-          <label className={labelClass}>Location</label>
-          <input className={inputClass} value={data.location} onChange={e => onChange('location', e.target.value)} placeholder="City, Country" />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Phone</label>
-          <input className={inputClass} value={data.phone} onChange={e => onChange('phone', e.target.value)} placeholder="+91-..." />
-        </div>
-        <div>
-          <label className={labelClass}>Email</label>
-          <input className={inputClass} value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@email.com" />
+          <label className={labelCls}>Location</label>
+          <input className={inputCls} value={data.location} onChange={e => onChange('location', e.target.value)} placeholder="City, Country" />
         </div>
       </div>
-      <div>
-        <label className={labelClass}>LinkedIn URL</label>
-        <input className={inputClass} value={data.linkedin} onChange={e => onChange('linkedin', e.target.value)} placeholder="https://linkedin.com/in/..." />
+      <div className="grid grid-cols-2 gap-2.5">
+        <div>
+          <label className={labelCls}>Phone</label>
+          <input className={inputCls} value={data.phone} onChange={e => onChange('phone', e.target.value)} placeholder="+91-..." />
+        </div>
+        <div>
+          <label className={labelCls}>Email</label>
+          <input className={inputCls} value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="you@email.com" />
+        </div>
       </div>
       <div>
-        <label className={labelClass}>GitHub URL</label>
-        <input className={inputClass} value={data.github} onChange={e => onChange('github', e.target.value)} placeholder="https://github.com/..." />
+        <label className={labelCls}>LinkedIn URL</label>
+        <input className={inputCls} value={data.linkedin} onChange={e => onChange('linkedin', e.target.value)} placeholder="https://linkedin.com/in/..." />
+      </div>
+      <div>
+        <label className={labelCls}>GitHub URL</label>
+        <input className={inputCls} value={data.github} onChange={e => onChange('github', e.target.value)} placeholder="https://github.com/..." />
       </div>
     </div>
   );

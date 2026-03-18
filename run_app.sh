@@ -3,20 +3,15 @@
 # Boot the API server in the background
 echo "🚀 Starting FastAPI Backend..."
 cd backend
-source venv/bin/activate
-# Install minimal deps just in case
-# pip install -r requirements.txt
-uvicorn main:app --port 8000 &
+# Run via python directly to bypass SIP source permission errors on activate
+venv/bin/python -m uvicorn main:app --port 8000 &
 BACKEND_PID=$!
 cd ..
 
-# Boot the Next.js Frontend server
-echo "🚀 Starting Next.js Frontend..."
+# Boot the Vite Frontend server
+echo "🚀 Starting Vite Frontend..."
 cd frontend
-if [ ! -d "node_modules" ]; then
-    npm install
-fi
-npm run dev -- -p 3000 &
+npm run dev -- --port 3000 &
 FRONTEND_PID=$!
 cd ..
 

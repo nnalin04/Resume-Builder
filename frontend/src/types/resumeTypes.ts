@@ -33,6 +33,13 @@ export interface Education {
   year: string;
 }
 
+export interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -40,6 +47,7 @@ export interface ResumeData {
   projects: Project[];
   education: Education[];
   skills: string;
+  certifications: Certification[];
 }
 
 export type TemplateId = 'classic' | 'modern' | 'professional' | 'twocolumn' | 'clean';

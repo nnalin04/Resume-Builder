@@ -31,7 +31,7 @@ function BulletLines({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateModern({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills } = data;
+  const { personalInfo: p, summary, experiences, projects, education, skills, certifications } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   const skillList = skills.split(',').map(s => s.trim()).filter(Boolean);
@@ -144,6 +144,22 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
                 <div style={{ fontSize: f(10.4), color: '#64748b', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
               </div>
               <div style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>{edu.year}</div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Certifications */}
+      {certifications && certifications.length > 0 && (
+        <>
+          <SectionTitle title="Certifications" fm={fm} />
+          {certifications.map(cert => (
+            <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
+              <div>
+                <span style={{ fontSize: f(10.9), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{cert.name}</span>
+                {cert.issuer && <span style={{ fontSize: f(10.4), color: '#64748b' }}> · {cert.issuer}</span>}
+              </div>
+              {cert.date && <div style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>{cert.date}</div>}
             </div>
           ))}
         </>

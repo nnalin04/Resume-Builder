@@ -38,7 +38,7 @@ function BulletLines({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateProfessional({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills } = data;
+  const { personalInfo: p, summary, experiences, projects, education, skills, certifications } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
@@ -116,6 +116,19 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{edu.institution}</div>
                   <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
                   <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{edu.year}</div>
+                </div>
+              ))}
+            </>
+          )}
+
+          {certifications && certifications.length > 0 && (
+            <>
+              <SideSection title="Certifications" fm={fm} />
+              {certifications.map(cert => (
+                <div key={cert.id} style={{ marginBottom: '6px' }}>
+                  <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{cert.name}</div>
+                  {cert.issuer && <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{cert.issuer}</div>}
+                  {cert.date && <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{cert.date}</div>}
                 </div>
               ))}
             </>

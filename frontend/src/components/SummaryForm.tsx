@@ -1,13 +1,29 @@
-interface Props { value: string; onChange: (v: string) => void; }
+interface Props { 
+  value: string; 
+  onChange: (v: string) => void;
+  onRewrite?: () => void;
+  isRewriting?: boolean;
+}
 
-export default function SummaryForm({ value, onChange }: Props) {
+export default function SummaryForm({ value, onChange, onRewrite, isRewriting }: Props) {
   return (
-    <textarea
-      className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none bg-white"
-      rows={4}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      placeholder="Write a 2-3 sentence professional summary..."
-    />
+    <div style={{ position: 'relative' }}>
+      {onRewrite && (
+        <button
+          onClick={onRewrite}
+          disabled={isRewriting}
+          style={{ position: 'absolute', top: -30, right: 0, fontSize: 12, color: '#4f46e5', background: '#e0e7ff', border: 'none', padding: '4px 8px', borderRadius: 4, cursor: 'pointer', fontWeight: 500 }}
+        >
+          {isRewriting ? '✨ Rewriting...' : '✨ Rewrite with AI'}
+        </button>
+      )}
+      <textarea
+        style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px', fontSize: 13, resize: 'none', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
+        rows={4}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="Write a 2-3 sentence professional summary..."
+      />
+    </div>
   );
 }

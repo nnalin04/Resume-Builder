@@ -7,39 +7,39 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-const inputClass = "w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white";
-const labelClass = "block text-xs font-medium text-gray-600 mb-1";
+const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
+const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
 
 export default function EducationForm({ education, onAdd, onUpdate, onRemove }: Props) {
   return (
-    <div className="space-y-4">
+    <div>
       {education.map((edu, idx) => (
-        <div key={edu.id} className="border border-gray-100 rounded-lg p-3 bg-gray-50">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Education {idx + 1}</span>
-            <button onClick={() => onRemove(edu.id)} className="text-red-400 hover:text-red-600 text-xs">✕ Remove</button>
+        <div key={edu.id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/70 mb-3">
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Education {idx + 1}</span>
+            <button onClick={() => onRemove(edu.id)} className="text-xs text-red-400 bg-transparent border-none cursor-pointer hover:text-red-500 transition-colors">✕ Remove</button>
           </div>
           <div className="mb-2">
-            <label className={labelClass}>Institution</label>
-            <input className={inputClass} value={edu.institution} onChange={e => onUpdate(edu.id, 'institution', e.target.value)} placeholder="University Name" />
+            <label className={labelCls}>Institution</label>
+            <input className={inputCls} value={edu.institution} onChange={e => onUpdate(edu.id, 'institution', e.target.value)} placeholder="University Name" />
           </div>
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
-              <label className={labelClass}>Degree</label>
-              <input className={inputClass} value={edu.degree} onChange={e => onUpdate(edu.id, 'degree', e.target.value)} placeholder="B.Tech" />
+              <label className={labelCls}>Degree</label>
+              <input className={inputCls} value={edu.degree} onChange={e => onUpdate(edu.id, 'degree', e.target.value)} placeholder="B.Tech" />
             </div>
             <div>
-              <label className={labelClass}>Field</label>
-              <input className={inputClass} value={edu.field} onChange={e => onUpdate(edu.id, 'field', e.target.value)} placeholder="Computer Science" />
+              <label className={labelCls}>Field</label>
+              <input className={inputCls} value={edu.field} onChange={e => onUpdate(edu.id, 'field', e.target.value)} placeholder="Computer Science" />
             </div>
           </div>
           <div>
-            <label className={labelClass}>Year</label>
-            <input className={inputClass} value={edu.year} onChange={e => onUpdate(edu.id, 'year', e.target.value)} placeholder="2022" />
+            <label className={labelCls}>Year</label>
+            <input className={inputCls} value={edu.year} onChange={e => onUpdate(edu.id, 'year', e.target.value)} placeholder="2022" />
           </div>
         </div>
       ))}
-      <button onClick={onAdd} className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-500 rounded-lg text-sm hover:bg-blue-50 transition-colors font-medium">
+      <button onClick={onAdd} className="w-full py-2 border-2 border-dashed border-blue-200 rounded-xl text-sm font-medium text-brand-600 bg-transparent cursor-pointer hover:bg-blue-50 transition-colors">
         + Add Education
       </button>
     </div>

@@ -1,4 +1,9 @@
+import logging
+
 from duckduckgo_search import DDGS
+
+logger = logging.getLogger(__name__)
+
 
 def perform_web_search(query: str, max_results: int = 3) -> list:
     """
@@ -7,7 +12,6 @@ def perform_web_search(query: str, max_results: int = 3) -> list:
     results = []
     try:
         with DDGS() as ddgs:
-            # We use text() to perform standard web search
             for r in ddgs.text(query, max_results=max_results):
                 results.append({
                     "title": r.get("title", ""),
@@ -15,6 +19,5 @@ def perform_web_search(query: str, max_results: int = 3) -> list:
                     "snippet": r.get("body", "")
                 })
     except Exception as e:
-        print(f"Error performing web search: {e}")
+        logger.error("Web search failed: %s", e, exc_info=True)
     return results
-
