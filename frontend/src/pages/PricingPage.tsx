@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { api } from '../api/client';
 import type { Plan } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -79,7 +80,12 @@ export default function PricingPage() {
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         {/* Hero text */}
-        <div className="text-center mb-14 animate-fade-in-up">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center mb-14"
+        >
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-600 text-xs font-semibold mb-4 uppercase tracking-widest">
             Simple Pricing
           </div>
@@ -89,7 +95,7 @@ export default function PricingPage() {
               ? `You're on the ${user?.subscription_plan} plan. Active until ${user?.subscription_expiry?.slice(0, 10)}.`
               : 'Start free. Download your first resume at no cost.'}
           </p>
-        </div>
+        </motion.div>
 
         {error && (
           <div className="max-w-xl mx-auto mb-8 bg-red-50 border border-red-100 text-red-600 rounded-xl p-4 text-sm flex items-center gap-2">

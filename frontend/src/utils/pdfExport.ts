@@ -1,71 +1,39 @@
-export async function exportToPDF(_elementId: string, _filename = 'resume') {
-  // Inject a one-time print stylesheet that hides everything except the resume
-  const styleId = '__resume_print_style__';
-  let style = document.getElementById(styleId) as HTMLStyleElement | null;
-  if (!style) {
-    style = document.createElement('style');
-    style.id = styleId;
-    document.head.appendChild(style);
+const BASE = (import.meta.env as Record<string, string>).VITE_API_URL ?? 'http://localhost:8000';
+
+function getToken(): string | null {
+  return localStorage.getItem('auth_token');
+}
+
+/**
+ * Export the resume as a PDF via the backend.
+ * The file is downloaded as a blob, which triggers the browser's native
+ * download notification bar (unlike window.print which saves silently).
+ */
+export async function exportToPDF(sections: object, template: string = 'classic', filename = 'resume') {
+  const token = getToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE}/api/export/generate`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ sections, template }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    const detail = typeof err.detail === 'object' ? err.detail.message : err.detail;
+    throw Object.assign(new Error(detail ?? 'Export failed'), { status: res.status });
   }
 
-  style.textContent = `
-    @media print {
-      @page {
-        size: A4 portrait;
-        margin: 0;
-      }
-      body > * { display: none !important; }
-      body > #__resume_print_wrapper__ { display: block !important; }
-
-      #__resume_print_wrapper__ {
-        position: fixed;
-        top: 0; left: 0;
-        width: 210mm;
-        height: 297mm;
-        overflow: hidden;
-        background: #fff;
-      }
-
-      /* Force exact colors in print */
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        color-adjust: exact !important;
-      }
-    }
-  `;
-
-  // Clone the resume into a top-level wrapper so @media print can isolate it
-  const preview = document.getElementById('resume-preview');
-  if (!preview) { alert('Resume preview not found.'); return; }
-
-  // Remove any old wrapper
-  const old = document.getElementById('__resume_print_wrapper__');
-  if (old) document.body.removeChild(old);
-
-  const wrapper = document.createElement('div');
-  wrapper.id = '__resume_print_wrapper__';
-  wrapper.style.cssText = 'display:none;';
-
-  const clone = preview.cloneNode(true) as HTMLElement;
-  clone.style.width = '210mm';
-  clone.style.height = '297mm';
-  clone.style.overflow = 'hidden';
-  clone.removeAttribute('id'); // avoid duplicate id
-
-  wrapper.appendChild(clone);
-  document.body.appendChild(wrapper);
-
-  // Wait for fonts + layout
-  await document.fonts.ready;
-  await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-
-  // Trigger print dialog — user saves as PDF (perfect quality, no library)
-  window.print();
-
-  // Cleanup after dialog closes
-  setTimeout(() => {
-    document.body.removeChild(wrapper);
-    style!.textContent = '';
-  }, 1000);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filename}.pdf`;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

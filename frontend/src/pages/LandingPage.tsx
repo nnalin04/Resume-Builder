@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -36,7 +37,12 @@ export default function LandingPage() {
       <main className="pt-32 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center">
         
         {/* Hero Section */}
-        <section className="relative w-full max-w-4xl mx-auto mt-10 md:mt-20 text-center flex flex-col items-center justify-center animate-fade-in-up">
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="relative w-full max-w-4xl mx-auto mt-10 md:mt-20 text-center flex flex-col items-center justify-center"
+        >
           {/* Abstract glows */}
           <div className="absolute top-0 right-10 w-[300px] h-[300px] bg-brand-400 rounded-full mix-blend-multiply filter blur-[120px] opacity-40 animate-subtle-pulse pointer-events-none"></div>
           <div className="absolute top-20 left-10 w-[250px] h-[250px] bg-purple-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-subtle-pulse pointer-events-none" style={{ animationDelay: '1.5s' }}></div>
@@ -65,10 +71,16 @@ export default function LandingPage() {
             
             <p className="mt-4 text-sm text-slate-400">No credit card required. Free to try.</p>
           </div>
-        </section>
+        </motion.section>
 
         {/* Feature Preview wrapper */}
-        <section className="mt-24 md:mt-32 w-full relative z-10 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+        <motion.section 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="mt-24 md:mt-32 w-full relative z-10"
+        >
           <div className="bg-slate-900 rounded-3xl p-2 md:p-8 shadow-2xl relative overflow-hidden">
              {/* Decorative grid */}
              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMEg0MFYxSDB6bTAgMzkiIGZpbGw9IiMzMzQxNTUiLz4KPHBhdGggZD0iTTAgMFY0MEgxVjB6bTM5IDAiIGZpbGw9IiMzMzQxNTUiLz4KPC9zdmc+')] opacity-20 pointer-events-none"></div>
@@ -83,7 +95,7 @@ export default function LandingPage() {
                 </div>
              </div>
           </div>
-        </section>
+        </motion.section>
 
       </main>
       

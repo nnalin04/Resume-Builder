@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useResumeState } from '../hooks/useResumeState';
-import type { TemplateId } from '../types/resumeTypes';
+import type { TemplateId, ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import PersonalInfoForm from '../components/PersonalInfoForm';
 import SummaryForm from '../components/SummaryForm';
@@ -18,6 +18,63 @@ import { exportToPDF } from '../utils/pdfExport';
 import { mapExperiences, mapEducation, mapProjects, mapCertifications, flattenSkills } from '../utils/sectionMappers';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
+
+// ─── Convert frontend ResumeData → backend sections format ───────────────────
+
+function resumeDataToSections(data: ResumeData): object {
+  return {
+    personal: {
+      name: data.personalInfo.name,
+      email: data.personalInfo.email,
+      phone: data.personalInfo.phone,
+      location: data.personalInfo.location,
+      linkedin: data.personalInfo.linkedin,
+      github: data.personalInfo.github,
+    },
+    summary: data.summary,
+    experience: data.experiences.map(e => ({
+      company: e.company,
+      title: e.position,
+      location: e.location,
+      start_date: e.startDate,
+      end_date: e.currentlyWorking ? 'Present' : e.endDate,
+      bullets: e.description ? e.description.split('\n').filter((b: string) => b.trim()) : [],
+    })),
+    education: data.education.map(e => ({
+      institution: e.institution,
+      degree: e.degree,
+      field: e.field,
+      graduation_date: e.year,
+    })),
+    skills: {
+      languages: [],
+      frameworks: [],
+      tools: [],
+      databases: [],
+      other: data.skills ? data.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+    },
+    projects: data.projects.map(p => ({
+      name: p.name,
+      description: p.description,
+      link: p.link,
+    })),
+    certifications: (data.certifications ?? []).map(c => ({
+      name: c.name,
+      issuer: c.issuer,
+      date: c.date,
+    })),
+  };
+}
+
+// ─── Template accent colors ───────────────────────────────────────────────────
+
+const TEMPLATE_COLORS: Record<TemplateId, string> = {
+  classic:      '#1a1a2e',
+  modern:       '#0070f3',
+  professional: '#6366f1',
+  twocolumn:    '#059669',
+  clean:        '#64748b',
+};
 
 const TEMPLATES: { id: TemplateId; label: string }[] = [
   { id: 'classic', label: 'Classic' },
@@ -75,7 +132,7 @@ export default function Dashboard() {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   // AI & Job Matching
@@ -137,7 +194,9 @@ export default function Dashboard() {
         await api.recordDownload();
         await refreshUser();
       }
-      await exportToPDF('resume-preview');
+      const sections = resumeDataToSections(resume.resumeData);
+      const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
+      await exportToPDF(sections, template, name);
       resume.clearDraft();
     } catch (err: unknown) {
       const e = err as { status?: number };
@@ -424,18 +483,20 @@ export default function Dashboard() {
       )}
 
       {/* ─── Main panels ──────────────────────────────────────────────────── */}
-      <div className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : 'flex-row'}`}>
+      <div style={{ display: 'flex', flex: '1 1 0', overflow: 'hidden', flexDirection: 'row' }}>
 
-        {isMobile && (
-          <div className="flex bg-white border-b border-slate-200 shrink-0">
-            <button onClick={() => setActiveTab('editor')} className={`flex-1 py-3.5 text-sm font-bold transition-colors ${activeTab === 'editor' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-800'}`}>Editor</button>
-            <button onClick={() => setActiveTab('preview')} className={`flex-1 py-3.5 text-sm font-bold transition-colors ${activeTab === 'preview' ? 'text-brand-600 border-b-2 border-brand-600' : 'text-slate-500 hover:text-slate-800'}`}>Preview</button>
-          </div>
-        )}
-
-        {/* ─── LEFT: Editor ─────────────────────────────────────────────── */}
-        {(!isMobile || activeTab === 'editor') && (
-          <div className={`shrink-0 bg-white ${isMobile ? 'w-full flex-1 overflow-y-auto' : 'w-[420px] lg:w-[480px] border-r border-slate-200 overflow-y-auto'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* ─── Editor Panel ─────────────────────────────────────────────── */}
+        <div style={{
+          flexShrink: 0,
+          width: isMobile ? '100%' : 420,
+          background: '#fff',
+          borderRight: isMobile ? 'none' : '1px solid #e2e8f0',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          display: 'flex',
+          flexDirection: 'column',
+        }}>
             <div className="p-4 bg-surface-50 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
               <h2 className="font-outfit font-bold text-lg text-slate-800">Resume Details</h2>
               <div className="flex items-center gap-2">
@@ -676,61 +737,203 @@ export default function Dashboard() {
               )}
             </div>
 
+            {/* Mobile Preview FAB */}
+            {isMobile && (
+              <div style={{ position: 'sticky', bottom: 0, background: 'linear-gradient(to top, rgba(255,255,255,1) 70%, transparent)', padding: '12px 16px 20px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowMobilePreview(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 28,
+                    padding: '13px 24px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 8px 24px -4px rgba(99,102,241,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    outline: 'none',
+                  }}
+                >
+                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  Preview Resume
+                </button>
+              </div>
+            )}
+
             <div style={{ height: 32 }} />
           </div>
-        )}
 
-        {/* ─── RIGHT: Preview ───────────────────────────────────────────── */}
-        {(!isMobile || activeTab === 'preview') && (
-          <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
-
-            {/* Template + font controls bar */}
-            <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-3 flex-wrap">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Template</span>
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl flex-wrap">
-                {TEMPLATES.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTemplate(t.id)}
-                    style={{ transition: 'all 0.15s' }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${template === t.id ? 'bg-white text-brand-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/70'}`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl ml-auto">
-                <span className="text-xs font-semibold text-slate-400 px-2">A</span>
-                {(['small', 'medium', 'large'] as FontSize[]).map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setFontSize(s)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize ${fontSize === s ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/70'}`}
-                  >
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+        {/* ─── Desktop: Preview + Template Strip ──────────────────────── */}
+        {!isMobile && (
+          <>
             {/* Resume preview */}
-            <div className="flex-1 overflow-y-auto flex justify-center items-start p-4 lg:p-8">
-              <div className="shrink-0" style={{ width: RESUME_W * (isMobile ? 0.42 : 0.82), height: RESUME_H * (isMobile ? 0.42 : 0.82) }}>
-                <div className="bg-white rounded-sm overflow-hidden" style={{
-                  transform: `scale(${isMobile ? 0.42 : 0.82})`,
+            <div style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
+              <div style={{ flexShrink: 0, width: RESUME_W * 0.82, height: RESUME_H * 0.82 }}>
+                <div style={{
+                  transform: 'scale(0.82)',
                   transformOrigin: 'top left',
                   width: RESUME_W,
                   height: RESUME_H,
+                  background: '#fff',
                   boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12), 0 30px 60px -15px rgba(0,0,0,0.06)',
                 }}>
                   <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Template + Font strip (right sidebar) */}
+            <div style={{
+              width: 90,
+              background: '#fff',
+              borderLeft: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '12px 0',
+              gap: 4,
+              flexShrink: 0,
+              overflowY: 'auto',
+            }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>Template</span>
+              {TEMPLATES.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTemplate(t.id)}
+                  title={t.label}
+                  style={{
+                    width: 70,
+                    padding: '8px 6px',
+                    background: template === t.id ? '#f1f5f9' : 'transparent',
+                    border: `2px solid ${template === t.id ? TEMPLATE_COLORS[t.id] : 'transparent'}`,
+                    borderRadius: 10,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 5,
+                    transition: 'all 0.15s',
+                    outline: 'none',
+                  }}
+                >
+                  <div style={{
+                    width: 38,
+                    height: 28,
+                    borderRadius: 4,
+                    background: TEMPLATE_COLORS[t.id],
+                    opacity: template === t.id ? 1 : 0.35,
+                    transition: 'opacity 0.15s',
+                  }} />
+                  <span style={{
+                    fontSize: 9.5,
+                    fontWeight: template === t.id ? 700 : 500,
+                    color: template === t.id ? TEMPLATE_COLORS[t.id] : '#94a3b8',
+                    textAlign: 'center',
+                    lineHeight: 1.2,
+                  }}>{t.label}</span>
+                </button>
+              ))}
+              <div style={{ marginTop: 'auto', borderTop: '1px solid #e2e8f0', width: '100%', padding: '10px 10px 0', display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>Font</span>
+                {(['small', 'medium', 'large'] as FontSize[]).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setFontSize(s)}
+                    style={{
+                      width: 70,
+                      padding: '5px 4px',
+                      background: fontSize === s ? '#ede9fe' : 'transparent',
+                      border: `2px solid ${fontSize === s ? '#6366f1' : 'transparent'}`,
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      fontSize: s === 'small' ? 10 : s === 'medium' ? 11 : 12,
+                      fontWeight: fontSize === s ? 700 : 500,
+                      color: fontSize === s ? '#6366f1' : '#94a3b8',
+                      transition: 'all 0.15s',
+                      outline: 'none',
+                    }}
+                  >
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
       </div>
+
+      {/* ─── Mobile full-screen preview modal ───────────────────────────────── */}
+      {isMobile && showMobilePreview && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: '#0f172a', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: '#1e293b', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: '1px solid #334155' }}>
+            <span style={{ color: '#f8fafc', fontWeight: 700, fontSize: 15 }}>Resume Preview</span>
+            <button
+              onClick={() => setShowMobilePreview(false)}
+              style={{ background: '#334155', border: 'none', borderRadius: 8, color: '#94a3b8', padding: '6px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 600, outline: 'none' }}
+            >✕ Close</button>
+          </div>
+          <div style={{ background: '#1e293b', padding: '8px 12px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0, borderBottom: '1px solid #334155' }}>
+            {TEMPLATES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setTemplate(t.id)}
+                style={{
+                  flexShrink: 0,
+                  padding: '6px 14px',
+                  borderRadius: 20,
+                  background: template === t.id ? TEMPLATE_COLORS[t.id] : '#334155',
+                  color: template === t.id ? '#fff' : '#94a3b8',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  outline: 'none',
+                }}
+              >{t.label}</button>
+            ))}
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 16, WebkitOverflowScrolling: 'touch' as const }}>
+            <div style={{ flexShrink: 0, width: RESUME_W * 0.44, height: RESUME_H * 0.44 }}>
+              <div style={{ transform: 'scale(0.44)', transformOrigin: 'top left', width: RESUME_W, height: RESUME_H, background: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+                <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+              </div>
+            </div>
+          </div>
+          <div style={{ background: '#1e293b', borderTop: '1px solid #334155', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+            <span style={{ color: '#64748b', fontSize: 12, fontWeight: 600 }}>Font:</span>
+            {(['small', 'medium', 'large'] as FontSize[]).map(s => (
+              <button
+                key={s}
+                onClick={() => setFontSize(s)}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: 16,
+                  background: fontSize === s ? '#6366f1' : '#334155',
+                  color: fontSize === s ? '#fff' : '#64748b',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  outline: 'none',
+                }}
+              >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+            ))}
+            <button
+              onClick={() => { setShowMobilePreview(false); handleExport(); }}
+              disabled={exporting}
+              style={{ marginLeft: 'auto', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)', color: '#fff', border: 'none', borderRadius: 20, padding: '8px 18px', fontSize: 13, fontWeight: 700, cursor: exporting ? 'wait' : 'pointer', opacity: exporting ? 0.7 : 1, outline: 'none' }}
+            >{exporting ? 'Exporting...' : '↓ Download PDF'}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

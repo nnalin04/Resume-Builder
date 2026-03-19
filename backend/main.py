@@ -601,6 +601,33 @@ async def export_resume(
     raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
 
 
+# ─── Direct PDF export (no resume_id required) ───────────────────────────────
+
+class DirectExportRequest(BaseModel):
+    sections: dict
+    template: str = "classic"
+
+
+@app.post("/api/export/generate")
+async def generate_export_direct(
+    body: DirectExportRequest,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+):
+    """Generate a PDF from raw sections JSON — no resume upload required.
+
+    Does NOT increment the download counter — the frontend calls
+    /api/record-download separately before hitting this endpoint.
+    """
+    if current_user:
+        _check_download_access(current_user)
+    pdf_bytes = generate_resume_pdf(body.sections, template=body.template)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
+    )
+
+
 # ─── Payments ────────────────────────────────────────────────────────────────
 
 class CreateOrderRequest(BaseModel):

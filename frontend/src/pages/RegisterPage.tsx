@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -34,7 +35,12 @@ export default function RegisterPage() {
     <div className="min-h-screen flex bg-surface-50 font-sans">
       
       {/* Left Pane - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 animate-fade-in-up">
+      <motion.div 
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16"
+      >
         <div className="max-w-md w-full">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white font-outfit font-bold text-xl shadow-glow">
@@ -100,10 +106,15 @@ export default function RegisterPage() {
             <Link to="/login" className="text-brand-600 font-semibold hover:text-brand-700 transition-colors">Sign in</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Right Pane - Gradient Background */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden text-white flex-col justify-between p-16">
+      <motion.div 
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden text-white flex-col justify-between p-16"
+      >
         {/* Abstract shapes */}
         <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-brand-500 rounded-full mix-blend-screen filter blur-[120px] opacity-60 animate-subtle-pulse"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500 rounded-full mix-blend-screen filter blur-[100px] opacity-50 animate-subtle-pulse" style={{ animationDelay: '1.5s' }}></div>
@@ -133,7 +144,7 @@ export default function RegisterPage() {
           </ul>
         </div>
         
-      </div>
+      </motion.div>
     </div>
   );
 }

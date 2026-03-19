@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
 const REDIRECT_URI = `${window.location.origin}/auth/google/callback`;
@@ -48,7 +49,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex bg-surface-50 font-sans">
       
       {/* Left Pane - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 animate-fade-in-up">
+      <motion.div 
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16"
+      >
         <div className="max-w-md w-full">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white font-outfit font-bold text-xl shadow-glow">
@@ -120,10 +126,15 @@ export default function LoginPage() {
             <Link to="/register" className="text-brand-600 font-semibold hover:text-brand-700 transition-colors">Sign up free</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Right Pane - Gradient Background */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-brand-900 overflow-hidden text-white flex-col justify-between p-16">
+      <motion.div 
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        className="hidden lg:flex lg:w-1/2 relative bg-brand-900 overflow-hidden text-white flex-col justify-between p-16"
+      >
         {/* Abstract shapes */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-subtle-pulse"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-600 rounded-full mix-blend-multiply filter blur-[120px] opacity-60 animate-subtle-pulse" style={{ animationDelay: '2s' }}></div>
@@ -143,7 +154,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
