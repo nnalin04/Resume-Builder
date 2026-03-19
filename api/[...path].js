@@ -25,10 +25,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Reconstruct the target URL (path + query string)
-  const pathParts = Array.isArray(req.query.path) ? req.query.path : [req.query.path ?? ''];
-  const qs        = req.url?.split('?')[1];
-  const target    = `${ORACLE_URL}/api/${pathParts.join('/')}${qs ? '?' + qs : ''}`;
+  // Reconstruct the target URL from req.url (req.query.path is not populated
+  // when using custom routes in vercel.json, so we parse the path directly).
+  const [reqPath, qs] = (req.url ?? '/').split('?');
+  // Strip the leading /api/ prefix — the Oracle URL already includes /api/
+  const apiPath = reqPath.replace(/^\/api\/?/, '');
+  const target  = `${ORACLE_URL}/api/${apiPath}${qs ? '?' + qs : ''}`;
 
   // Forward safe headers, inject the shared secret
   const forward = { 'X-Backend-Secret': SECRET };
