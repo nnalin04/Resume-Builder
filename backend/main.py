@@ -1,3 +1,4 @@
+import hmac
 import json
 import logging
 import os
@@ -67,6 +68,25 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Accept"],
 )
+
+# ─── Backend Secret Guard ─────────────────────────────────────────────────────
+# Requests must carry X-Backend-Secret matching the BACKEND_SECRET env var.
+# This is set only by the Vercel serverless proxy — direct hits to the Oracle
+# IP without the secret are rejected with 403.
+# If BACKEND_SECRET is not set (local dev), the check is skipped entirely.
+
+_BACKEND_SECRET = os.getenv("BACKEND_SECRET", "")
+_EXEMPT_PATHS   = {"/", "/health"}   # health probe doesn't go through Vercel
+
+@app.middleware("http")
+async def verify_backend_secret(request: Request, call_next):
+    if _BACKEND_SECRET and request.url.path not in _EXEMPT_PATHS:
+        incoming = request.headers.get("X-Backend-Secret", "")
+        if not hmac.compare_digest(incoming, _BACKEND_SECRET):
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+    return await call_next(request)
+
 
 # ─── Security Headers ─────────────────────────────────────────────────────────
 

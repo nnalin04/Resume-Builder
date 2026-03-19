@@ -2,8 +2,5 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "echo skip",
-  "framework": "vite",
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "http://80.225.223.142:8000/api/:path*" }
-  ]
+  "framework": "vite"
 }
