@@ -89,6 +89,62 @@ const RESUME_H = 1123;
 
 type Section = 'personal' | 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications';
 
+// ─── Template thumbnail (CSS mock preview) ────────────────────────────────────
+
+function TemplateMiniPreview({ id, active }: { id: TemplateId; active: boolean }) {
+  const c = TEMPLATE_COLORS[id];
+  const line = (w: string, h = 2, color = '#e2e8f0') => (
+    <div style={{ width: w, height: h, background: color, borderRadius: 1, flexShrink: 0 }} />
+  );
+  const sectionLabel = () => line('38%', 2, c);
+
+  return (
+    <div style={{
+      width: 62, height: 88, background: '#fff', borderRadius: 5,
+      overflow: 'hidden', border: `2px solid ${active ? c : '#e2e8f0'}`,
+      transition: 'border-color 0.15s', padding: '5px 5px 4px',
+      display: 'flex', flexDirection: 'column', gap: 2, boxSizing: 'border-box',
+    }}>
+      {id === 'twocolumn' ? (
+        <div style={{ display: 'flex', gap: 3, height: '100%' }}>
+          <div style={{ width: 20, background: c, borderRadius: 2, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 2px' }}>
+            {line('100%', 2, 'rgba(255,255,255,0.6)')}
+            {line('80%', 2, 'rgba(255,255,255,0.4)')}
+            {line('90%', 2, 'rgba(255,255,255,0.4)')}
+            {line('70%', 2, 'rgba(255,255,255,0.4)')}
+          </div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, paddingTop: 2 }}>
+            {line('100%', 3, '#1e293b')}
+            {line('75%', 2, '#64748b')}
+            <div style={{ height: 1 }} />
+            {line('85%')} {line('70%')} {line('60%')}
+          </div>
+        </div>
+      ) : id === 'clean' ? (
+        <>
+          {line('80%', 3, '#1e293b')}
+          {line('55%', 2, '#64748b')}
+          <div style={{ height: 1, background: '#e2e8f0', margin: '1px 0' }} />
+          {line('35%', 2, c)} {line('90%')} {line('75%')} {line('80%')}
+          <div style={{ height: 1 }} />
+          {line('35%', 2, c)} {line('85%')} {line('65%')} {line('70%')}
+        </>
+      ) : (
+        <>
+          <div style={{ height: id === 'modern' ? 18 : 14, background: c, borderRadius: 2, marginBottom: 2, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+            <div style={{ height: id === 'modern' ? 4 : 3, width: '65%', background: 'rgba(255,255,255,0.85)', borderRadius: 1 }} />
+          </div>
+          {line('55%', 2, '#64748b')}
+          <div style={{ height: 1 }} />
+          {sectionLabel()} {line('90%')} {line('75%')} {line('80%')}
+          <div style={{ height: 1 }} />
+          {sectionLabel()} {line('85%')} {line('65%')}
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Toast system ─────────────────────────────────────────────────────────────
 
 type ToastType = 'error' | 'success' | 'info';
@@ -126,11 +182,16 @@ export default function Dashboard() {
   const [template, setTemplate] = useState<TemplateId>('classic');
   const [fontSize, setFontSize] = useState<FontSize>('small');
   const [openSections, setOpenSections] = useState<Record<Section, boolean>>({
-    personal: true, summary: true, skills: true,
-    experience: true, projects: false, education: false, certifications: false,
+    personal: false, summary: false, skills: false,
+    experience: false, projects: false, education: false, certifications: false,
   });
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
+  const [openJD, setOpenJD] = useState(false);
+  const [editorWidth, setEditorWidth] = useState(420);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartWidthRef = useRef(420);
 
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -182,7 +243,33 @@ export default function Dashboard() {
   }, [resume.isDirty]);
 
   const toggleSection = (s: Section) =>
-    setOpenSections(prev => ({ ...prev, [s]: !prev[s] }));
+    setOpenSections(prev => {
+      const wasOpen = prev[s];
+      const allClosed: Record<Section, boolean> = {
+        personal: false, summary: false, skills: false,
+        experience: false, projects: false, education: false, certifications: false,
+      };
+      return wasOpen ? allClosed : { ...allClosed, [s]: true };
+    });
+
+  const handleDividerMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    dragStartXRef.current = e.clientX;
+    dragStartWidthRef.current = editorWidth;
+    const onMove = (me: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const newW = Math.max(300, Math.min(650, dragStartWidthRef.current + me.clientX - dragStartXRef.current));
+      setEditorWidth(newW);
+    };
+    const onUp = () => {
+      isDraggingRef.current = false;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
@@ -439,6 +526,26 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
+          {/* Font size controls in toolbar */}
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 12px', borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
+              <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600, marginRight: 2 }}>Font</span>
+              {(['small', 'medium', 'large'] as FontSize[]).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setFontSize(s)}
+                  style={{
+                    padding: '3px 9px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                    fontSize: 11, fontWeight: fontSize === s ? 700 : 500,
+                    background: fontSize === s ? '#ede9fe' : 'transparent',
+                    color: fontSize === s ? '#6366f1' : '#94a3b8',
+                    transition: 'all 0.15s',
+                  }}
+                >{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+              ))}
+            </div>
+          )}
+
           {user && !isSubscriber && freeLeft !== null && (
             <span className={`hidden sm:flex px-3 py-1 text-xs font-semibold rounded-full items-center gap-1 ${freeLeft > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
               {freeLeft > 0 ? `${freeLeft} free download left` : '0 free downloads left'}
@@ -488,7 +595,7 @@ export default function Dashboard() {
         {/* ─── Editor Panel ─────────────────────────────────────────────── */}
         <div style={{
           flexShrink: 0,
-          width: isMobile ? '100%' : 420,
+          width: isMobile ? '100%' : editorWidth,
           background: '#fff',
           borderRight: isMobile ? 'none' : '1px solid #e2e8f0',
           overflowY: 'auto',
@@ -519,8 +626,8 @@ export default function Dashboard() {
             </div>
 
             {/* Target Job Description + ATS */}
-            <SectionHeader title="Target Job Description" open={openSections.personal} onToggle={() => {}} />
-            <div className="p-5 bg-white border-b border-slate-100">
+            <SectionHeader title="Target Job Description" open={openJD} onToggle={() => setOpenJD(v => !v)} />
+            {openJD && <div className="p-5 bg-white border-b border-slate-100">
               <p className="text-xs text-slate-500 mb-2 font-medium">Paste the job ad to get an ATS score & AI suggestions</p>
               <textarea
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none shadow-inner"
@@ -576,7 +683,7 @@ export default function Dashboard() {
                   )}
                 </div>
               )}
-            </div>
+            </div>}
 
             {/* Personal Info */}
             <SectionHeader title="Personal Information" open={openSections.personal} onToggle={() => toggleSection('personal')} />
@@ -770,6 +877,22 @@ export default function Dashboard() {
             <div style={{ height: 32 }} />
           </div>
 
+        {/* ─── Resizable divider ────────────────────────────────────────── */}
+        {!isMobile && (
+          <div
+            onMouseDown={handleDividerMouseDown}
+            style={{
+              width: 5, flexShrink: 0, cursor: 'col-resize',
+              background: '#e2e8f0', transition: 'background 0.15s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#6366f1'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#e2e8f0'; }}
+          >
+            <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.5)', borderRadius: 1 }} />
+          </div>
+        )}
+
         {/* ─── Desktop: Preview + Template Strip ──────────────────────── */}
         {!isMobile && (
           <>
@@ -789,9 +912,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Template + Font strip (right sidebar) */}
+            {/* Template strip (right sidebar — font moved to header) */}
             <div style={{
-              width: 90,
+              width: 100,
               background: '#fff',
               borderLeft: '1px solid #e2e8f0',
               display: 'flex',
@@ -809,28 +932,21 @@ export default function Dashboard() {
                   onClick={() => setTemplate(t.id)}
                   title={t.label}
                   style={{
-                    width: 70,
-                    padding: '8px 6px',
-                    background: template === t.id ? '#f1f5f9' : 'transparent',
-                    border: `2px solid ${template === t.id ? TEMPLATE_COLORS[t.id] : 'transparent'}`,
+                    width: 80,
+                    padding: '6px 6px 4px',
+                    background: template === t.id ? '#f8fafc' : 'transparent',
+                    border: 'none',
                     borderRadius: 10,
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: 5,
+                    gap: 4,
                     transition: 'all 0.15s',
                     outline: 'none',
                   }}
                 >
-                  <div style={{
-                    width: 38,
-                    height: 28,
-                    borderRadius: 4,
-                    background: TEMPLATE_COLORS[t.id],
-                    opacity: template === t.id ? 1 : 0.35,
-                    transition: 'opacity 0.15s',
-                  }} />
+                  <TemplateMiniPreview id={t.id} active={template === t.id} />
                   <span style={{
                     fontSize: 9.5,
                     fontWeight: template === t.id ? 700 : 500,
@@ -840,30 +956,7 @@ export default function Dashboard() {
                   }}>{t.label}</span>
                 </button>
               ))}
-              <div style={{ marginTop: 'auto', borderTop: '1px solid #e2e8f0', width: '100%', padding: '10px 10px 0', display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>Font</span>
-                {(['small', 'medium', 'large'] as FontSize[]).map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setFontSize(s)}
-                    style={{
-                      width: 70,
-                      padding: '5px 4px',
-                      background: fontSize === s ? '#ede9fe' : 'transparent',
-                      border: `2px solid ${fontSize === s ? '#6366f1' : 'transparent'}`,
-                      borderRadius: 8,
-                      cursor: 'pointer',
-                      fontSize: s === 'small' ? 10 : s === 'medium' ? 11 : 12,
-                      fontWeight: fontSize === s ? 700 : 500,
-                      color: fontSize === s ? '#6366f1' : '#94a3b8',
-                      transition: 'all 0.15s',
-                      outline: 'none',
-                    }}
-                  >
-                    {s.charAt(0).toUpperCase() + s.slice(1)}
-                  </button>
-                ))}
-              </div>
+              <div style={{ height: 8 }} />
             </div>
           </>
         )}
