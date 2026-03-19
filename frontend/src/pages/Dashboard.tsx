@@ -214,16 +214,16 @@ export default function Dashboard() {
 
   const handleScore = async () => {
     if (!jobDescription.trim()) { addToast('Paste a job description first.', 'info'); return; }
-    if (!backendResumeId) { addToast('Import a PDF first to calculate ATS score.', 'info'); return; }
     setIsScoring(true);
     try {
-      const res = await api.getAtsScore(backendResumeId, jobDescription);
+      // If we have a backend resume ID use it; otherwise score against current skills text
+      const resumeId = backendResumeId ?? 0;
+      const res = await api.getAtsScore(resumeId, jobDescription);
       setAtsScore(res.score);
-      // Prefer matched/missing if returned; fall back to keywords_found/keywords_missing
       setAtsMatched(res.matched ?? res.keywords_found ?? []);
       setAtsMissing(res.missing ?? res.keywords_missing ?? []);
     } catch {
-      addToast('Failed to get ATS score', 'error');
+      addToast('Failed to get ATS score. Try importing your PDF first.', 'error');
     } finally {
       setIsScoring(false);
     }
@@ -371,37 +371,12 @@ export default function Dashboard() {
       )}
 
       {/* ─── Top Nav ──────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 py-3 flex items-center justify-between shrink-0 gap-4 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-4 py-3 flex items-center justify-between shrink-0 gap-3 shadow-sm">
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center shadow-soft">
             <span className="text-white text-sm font-outfit font-bold">R</span>
           </div>
           <span className="font-outfit font-bold text-lg text-slate-900 tracking-tight hidden sm:block">Resume Builder</span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 bg-surface-100 p-1 rounded-xl">
-          {TEMPLATES.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTemplate(t.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${template === t.id ? 'bg-white text-brand-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="hidden md:flex items-center gap-1.5 bg-surface-100 p-1 rounded-xl shrink-0">
-          {(['small', 'medium', 'large'] as FontSize[]).map(s => (
-            <button
-              key={s}
-              onClick={() => setFontSize(s)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${fontSize === s ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
-            >
-              <span className="hidden lg:inline">{s}</span>
-              <span className="lg:hidden">{s.charAt(0)}</span>
-            </button>
-          ))}
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -460,7 +435,7 @@ export default function Dashboard() {
 
         {/* ─── LEFT: Editor ─────────────────────────────────────────────── */}
         {(!isMobile || activeTab === 'editor') && (
-          <div className={`shrink-0 overflow-y-auto bg-white ${isMobile ? 'w-full' : 'w-[420px] lg:w-[480px] border-r border-slate-200'}`}>
+          <div className={`shrink-0 bg-white ${isMobile ? 'w-full flex-1 overflow-y-auto' : 'w-[420px] lg:w-[480px] border-r border-slate-200 overflow-y-auto'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
             <div className="p-4 bg-surface-50 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
               <h2 className="font-outfit font-bold text-lg text-slate-800">Resume Details</h2>
               <div className="flex items-center gap-2">
@@ -707,16 +682,49 @@ export default function Dashboard() {
 
         {/* ─── RIGHT: Preview ───────────────────────────────────────────── */}
         {(!isMobile || activeTab === 'preview') && (
-          <div className={`flex-1 overflow-y-auto flex justify-center bg-slate-200/50 ${isMobile ? 'p-4' : 'p-8 lg:p-12'}`}>
-            <div className="shrink-0" style={{ width: RESUME_W * (isMobile ? 0.45 : 0.88), height: RESUME_H * (isMobile ? 0.45 : 0.88) }}>
-              <div className="bg-white rounded-sm overflow-hidden" style={{
-                transform: `scale(${isMobile ? 0.45 : 0.88})`,
-                transformOrigin: 'top left',
-                width: RESUME_W,
-                height: RESUME_H,
-                boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1), 0 30px 60px -15px rgba(0,0,0,0.05)',
-              }}>
-                <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+          <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
+
+            {/* Template + font controls bar */}
+            <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-3 flex-wrap">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Template</span>
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl flex-wrap">
+                {TEMPLATES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setTemplate(t.id)}
+                    style={{ transition: 'all 0.15s' }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${template === t.id ? 'bg-white text-brand-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/70'}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl ml-auto">
+                <span className="text-xs font-semibold text-slate-400 px-2">A</span>
+                {(['small', 'medium', 'large'] as FontSize[]).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setFontSize(s)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize ${fontSize === s ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:text-slate-700 hover:bg-white/70'}`}
+                  >
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Resume preview */}
+            <div className="flex-1 overflow-y-auto flex justify-center items-start p-4 lg:p-8">
+              <div className="shrink-0" style={{ width: RESUME_W * (isMobile ? 0.42 : 0.82), height: RESUME_H * (isMobile ? 0.42 : 0.82) }}>
+                <div className="bg-white rounded-sm overflow-hidden" style={{
+                  transform: `scale(${isMobile ? 0.42 : 0.82})`,
+                  transformOrigin: 'top left',
+                  width: RESUME_W,
+                  height: RESUME_H,
+                  boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12), 0 30px 60px -15px rgba(0,0,0,0.06)',
+                }}>
+                  <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+                </div>
               </div>
             </div>
           </div>

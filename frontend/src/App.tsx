@@ -31,6 +31,15 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, EBSta
   }
 }
 
+// ─── Protected route — redirects to /login if not authenticated ───────────────
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 // ─── Splash while auth loads ──────────────────────────────────────────────────
 
 function AppRoutes() {
@@ -47,12 +56,12 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/editor" element={<Dashboard />} />
+      <Route path="/editor" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
       <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
