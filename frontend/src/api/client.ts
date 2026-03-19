@@ -1,4 +1,7 @@
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+// In production (Vercel), VITE_API_URL is empty — requests go to /api/* on the
+// same origin and Vercel's rewrite rule proxies them to the Oracle backend.
+// In local dev, set VITE_API_URL=http://localhost:8000 in .env.local
+const BASE = import.meta.env.VITE_API_URL ?? '';
 
 function getToken(): string | null {
   return localStorage.getItem('auth_token');
