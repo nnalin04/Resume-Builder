@@ -6,8 +6,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$REPO_DIR/backend/.env"
 SECRET="8825c06df346d85672ff8994209af0702640b3970dbd9e3655ff18bc3a4be191"
-FRONTEND_ORIGIN="${1:-}"   # pass your Vercel URL as first arg, e.g.:
-                            # bash oracle-setup.sh https://my-app.vercel.app
+FRONTEND_ORIGIN="${1:-https://resume-builder-black-nu.vercel.app}"
 
 echo "=== Oracle backend setup ==="
 echo "Repo dir : $REPO_DIR"
