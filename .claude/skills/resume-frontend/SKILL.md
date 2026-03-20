@@ -115,6 +115,42 @@ If the app shows a blank screen, check for:
 2. TypeScript compile error — run `npx tsc --noEmit`
 3. Vite dev server errors — check terminal output
 
+## Dev Environment Gotchas
+
+### ⚠️ VITE_API_URL Must Be Set for Local Dev
+
+The frontend uses `VITE_API_URL` as the base for all API calls. Without it, every `/api/*` request hits the Vite dev server (port 3000) and gets back an HTML page — producing confusing `Unexpected token '<'... is not valid JSON` console errors. The UI renders but no data loads.
+
+**Fix**: Create `frontend/.env.local`:
+```
+VITE_API_URL=http://localhost:8000
+```
+
+Restart the Vite dev server after creating this file (`npm run dev -- --port 3000`).
+
+This is a local dev issue only. In production, `VITE_API_URL` is empty and `/api/*` requests go to the same origin where the backend is served.
+
+### Template Count Is Now 10
+
+`TemplateId` currently supports 10 templates:
+```typescript
+export type TemplateId = 'classic' | 'modern' | 'professional' | 'twocolumn' | 'clean'
+                       | 'minimal' | 'executive' | 'tech' | 'finance' | 'creative';
+```
+The `PreviewComponent` map in `Dashboard.tsx` and the `TEMPLATES` array must both include all 10.
+
+### New Pages Added
+
+| Route | File | Auth? |
+|-------|------|-------|
+| `/cover-letter` | `CoverLetterPage.tsx` | Protected |
+| `/forgot-password` | `ForgotPasswordPage.tsx` | Public |
+| `/reset-password` | `ResetPasswordPage.tsx` | Public |
+
+### Version Management is PDF-Gated
+
+The "Save Version" and "Version History" features require `backendResumeId` (set after PDF upload). Both buttons are `disabled` with `title` tooltips when no PDF is loaded. Do not remove this gate — the backend version API requires a real `resume_id`.
+
 ## Step 1 — Read Relevant Files First
 
 Always read the files you're about to change before editing:

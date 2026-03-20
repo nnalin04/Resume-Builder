@@ -333,3 +333,74 @@ Day 7: Migration drops old status column
 | Inline index on large table | Blocks writes during build | CREATE INDEX CONCURRENTLY |
 | Schema + data in one migration | Hard to rollback, long transactions | Separate migrations |
 | Dropping column before removing code | Application errors on missing column | Remove code first, drop column next deploy |
+
+---
+
+## SQLAlchemy + SQLite Specifics (FastAPI Projects)
+
+### ⚠️ Critical: `create_all()` Does NOT Alter Existing Tables
+
+`Base.metadata.create_all(bind=engine)` only **creates tables that don't exist yet**.
+It will **never** add columns, drop columns, or modify existing tables.
+
+```python
+# ✅ New table — create_all() handles this automatically
+class ResumeVersion(Base):
+    __tablename__ = "resume_versions"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# ❌ New column on EXISTING table — create_all() silently does NOTHING
+class User(Base):
+    __tablename__ = "users"          # table already exists in DB
+    free_downloads_reset_date = Column(DateTime)  # this column will NOT be added
+```
+
+### Always Run ALTER TABLE for New Columns
+
+After adding a column to an existing SQLAlchemy model, manually migrate the live DB:
+
+```python
+# Run once against the live database file
+from database import engine
+from sqlalchemy import text
+
+with engine.connect() as conn:
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN free_downloads_reset_date DATETIME"))
+        conn.commit()
+        print("Migration done")
+    except Exception as e:
+        print(f"Already exists or error: {e}")
+```
+
+Or via shell:
+```bash
+cd backend && source venv/bin/activate
+python -c "
+from database import engine
+from sqlalchemy import text
+with engine.connect() as conn:
+    conn.execute(text('ALTER TABLE <table> ADD COLUMN <col> <type>'))
+    conn.commit()
+"
+```
+
+### Verify After Migration
+
+```python
+from sqlalchemy import text
+with engine.connect() as conn:
+    result = conn.execute(text("PRAGMA table_info(<table>)"))
+    cols = [r[1] for r in result.fetchall()]
+    print(cols)  # confirm the new column is there
+```
+
+### Rule of Thumb for This Project
+
+| Change | What to Do |
+|--------|-----------|
+| New model class (new table) | `create_all()` handles it — just call it |
+| New column on existing model | `ALTER TABLE ... ADD COLUMN ...` manually |
+| New index on existing table | `CREATE INDEX IF NOT EXISTS ...` manually |
+| Rename column | New column + backfill + drop old (expand-contract) |

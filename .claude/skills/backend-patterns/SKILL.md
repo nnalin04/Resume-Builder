@@ -596,3 +596,76 @@ export async function GET(request: Request) {
 ```
 
 **Remember**: Backend patterns enable scalable, maintainable server-side applications. Choose patterns that fit your complexity level.
+
+---
+
+## FastAPI + Python Patterns (This Project)
+
+### Monthly Reset via Lazy Check (No Cron Needed)
+
+Instead of a cron job, reset counters on first use each month using a `(year, month)` tuple comparison:
+
+```python
+def _apply_monthly_reset(user: models.User, db: Session) -> None:
+    now = datetime.now(timezone.utc)
+    reset_date = user.free_downloads_reset_date
+    if reset_date is None or (now.year, now.month) != (reset_date.year, reset_date.month):
+        user.free_downloads_used = 0
+        user.free_downloads_reset_date = now
+        db.commit()
+```
+
+Call this before any download gate check. No scheduler, no cron, no celery needed.
+
+### Email Enumeration-Safe Forgot Password
+
+Always return HTTP 200 regardless of whether the email exists. Never reveal which emails are registered:
+
+```python
+@app.post("/api/auth/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == body.email).first()
+    # Always 200 — prevents attackers from probing which emails are registered
+    if not user or user.auth_provider != "LOCAL":
+        return {"detail": "If that email exists, a reset link has been sent."}
+    # ... generate token and send email
+```
+
+### Single-Use Expiring Reset Tokens
+
+```python
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)   # secrets.token_urlsafe(32)
+    expires_at = Column(DateTime)                      # now + 30 minutes
+    used = Column(Integer, default=0)                  # 0=unused, 1=consumed
+
+# On verify: check used==0 AND expires_at > now, then immediately set used=1
+# Invalidate all previous unused tokens when issuing a new one
+```
+
+### Graceful SMTP Fallback for Local Dev
+
+When SMTP is not configured, log/return the reset link instead of crashing. Makes local dev work without email setup:
+
+```python
+if not _SMTP_HOST or not _SMTP_USER:
+    logging.warning("SMTP not configured. Reset link: %s", reset_link)
+    return {"detail": "...", "dev_reset_link": reset_link}  # only in dev
+```
+
+Remove `dev_reset_link` from the response in production.
+
+### Timezone-Aware Datetime Comparisons
+
+SQLite stores datetimes without timezone info. When comparing with `datetime.now(timezone.utc)`, normalize:
+
+```python
+expires = reset_token.expires_at
+if expires.tzinfo is None:
+    expires = expires.replace(tzinfo=timezone.utc)  # treat stored as UTC
+if now > expires:
+    # token expired
+```

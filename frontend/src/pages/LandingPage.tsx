@@ -49,15 +49,15 @@ export default function LandingPage() {
 
           <div className="relative z-10 w-full flex flex-col items-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-sm text-brand-600 text-sm font-semibold mb-6">
-              ✨ Free PDF downloads included
+              ✨ 3 free PDF downloads/month — no credit card required
             </div>
-            
+
             <h1 className="font-outfit text-5xl md:text-7xl font-bold tracking-tight text-slate-900 mb-6 leading-tight max-w-3xl">
               The professional resume you deserve.
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-slate-500 mb-10 max-w-2xl leading-relaxed">
-              Create an ATS-optimized, beautiful resume in minutes. Stand out from the crowd and land your next dream job.
+              Create an ATS-optimized, beautiful resume in minutes. 3 free PDF downloads per month included — no credit card required. DOCX always free.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
@@ -97,8 +97,48 @@ export default function LandingPage() {
           </div>
         </motion.section>
 
+        {/* Competitor comparison table */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="mt-20 w-full max-w-3xl mx-auto"
+        >
+          <h2 className="font-outfit text-3xl font-bold text-slate-900 text-center mb-2">Why Resume Builder?</h2>
+          <p className="text-slate-500 text-center mb-10">See how we compare to other resume tools.</p>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-soft bg-white">
+            <table style={{ width: '100%', borderCollapse: 'collapse' as const }}>
+              <thead>
+                <tr style={{ background: '#f8fafc' }}>
+                  <th style={{ padding: '14px 20px', textAlign: 'left' as const, fontSize: 13, fontWeight: 700, color: '#475569', borderBottom: '1px solid #e2e8f0' }}>Feature</th>
+                  <th style={{ padding: '14px 20px', textAlign: 'center' as const, fontSize: 13, fontWeight: 800, color: '#6366f1', borderBottom: '1px solid #e2e8f0' }}>Resume Builder</th>
+                  <th style={{ padding: '14px 20px', textAlign: 'center' as const, fontSize: 13, fontWeight: 700, color: '#94a3b8', borderBottom: '1px solid #e2e8f0' }}>Competitors</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Free PDF downloads',          '3/month included',  'Paid only'],
+                  ['DOCX export',                 'Always free',       'Paid feature'],
+                  ['ATS optimization',            '✅ Included',        '❌ or paid add-on'],
+                  ['10 resume templates',         '✅ Included',        'Limited on free tier'],
+                  ['AI cover letter generator',   '✅ Included',        '❌ or extra cost'],
+                  ['No watermarks',               '✅ Always',          '❌ on free plans'],
+                  ['Lifetime plan available',     '✅ ₹999 one-time',   '❌ subscription only'],
+                ].map(([feature, us, them], i) => (
+                  <tr key={feature} style={{ background: i % 2 === 0 ? '#fff' : '#fafbff' }}>
+                    <td style={{ padding: '12px 20px', fontSize: 14, color: '#334155', borderBottom: '1px solid #f1f5f9' }}>{feature}</td>
+                    <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 600, color: '#6366f1', textAlign: 'center' as const, borderBottom: '1px solid #f1f5f9' }}>{us}</td>
+                    <td style={{ padding: '12px 20px', fontSize: 13, color: '#94a3b8', textAlign: 'center' as const, borderBottom: '1px solid #f1f5f9' }}>{them}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.section>
+
       </main>
-      
+
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">

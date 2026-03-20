@@ -2,8 +2,12 @@ import hmac
 import json
 import logging
 import os
+import secrets
+import smtplib
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request, Header, Query
@@ -24,6 +28,7 @@ from resume_parser_ai import parse_resume_with_ai
 from resume_generator import generate_clarifying_questions, generate_optimized_resume, build_chat_response
 from ats_scorer import calculate_ats_score, _get_nlp
 from pdf_generator import generate_resume_pdf
+from docx_generator import generate_resume_docx
 from search_client import perform_web_search
 from auth import (
     hash_password, verify_password, create_access_token,
@@ -208,6 +213,153 @@ async def google_callback(body: GoogleCallbackRequest, db: Session = Depends(get
 
     token = create_access_token(user.id, user.email)
     return _user_response(user, token)
+
+
+# ─── Password reset helpers ───────────────────────────────────────────────────
+
+_SMTP_HOST = os.getenv("SMTP_HOST", "")
+_SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+_SMTP_USER = os.getenv("SMTP_USER", "")
+_SMTP_PASS = os.getenv("SMTP_PASS", "")
+_SMTP_FROM = os.getenv("SMTP_FROM", "Resume Builder <noreply@resumebuilder.app>")
+_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+_RESET_TOKEN_TTL_MINUTES = 30
+
+
+def _send_reset_email(to_email: str, reset_link: str) -> None:
+    """Send password reset email via SMTP. Raises on failure."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Reset your Resume Builder password"
+    msg["From"] = _SMTP_FROM
+    msg["To"] = to_email
+
+    text_body = f"""Hi,
+
+You requested a password reset for your Resume Builder account.
+
+Click the link below to set a new password (valid for {_RESET_TOKEN_TTL_MINUTES} minutes):
+
+{reset_link}
+
+If you didn't request this, you can safely ignore this email.
+
+— The Resume Builder Team
+"""
+    html_body = f"""<!DOCTYPE html>
+<html>
+<body style="font-family:Inter,sans-serif;background:#f8fafc;padding:40px 0;margin:0">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:10px;display:flex;align-items:center;justify-content:center">
+        <span style="color:#fff;font-weight:800;font-size:18px">R</span>
+      </div>
+      <span style="font-weight:700;font-size:18px;color:#0f172a">Resume Builder</span>
+    </div>
+    <h1 style="font-size:24px;font-weight:700;color:#0f172a;margin:0 0 8px">Reset your password</h1>
+    <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 28px">
+      You requested a password reset. Click the button below to choose a new password.
+      This link expires in <strong>{_RESET_TOKEN_TTL_MINUTES} minutes</strong>.
+    </p>
+    <a href="{reset_link}" style="display:inline-block;background:#6366f1;color:#fff;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;text-decoration:none">
+      Reset password
+    </a>
+    <p style="color:#94a3b8;font-size:13px;margin:28px 0 0">
+      If you didn't request this, you can safely ignore this email.
+    </p>
+  </div>
+</body>
+</html>"""
+
+    msg.attach(MIMEText(text_body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
+
+    with smtplib.SMTP(_SMTP_HOST, _SMTP_PORT) as server:
+        server.ehlo()
+        server.starttls()
+        server.login(_SMTP_USER, _SMTP_PASS)
+        server.sendmail(_SMTP_FROM, to_email, msg.as_string())
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+
+@app.post("/api/auth/forgot-password")
+@limiter.limit("5/minute")
+def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Send a password reset link to the given email (if it exists)."""
+    user = db.query(models.User).filter(models.User.email == body.email).first()
+    # Always return 200 to prevent email enumeration
+    if not user or user.auth_provider != "LOCAL":
+        return {"detail": "If that email exists, a reset link has been sent."}
+
+    # Invalidate old tokens for this user
+    db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.user_id == user.id,
+        models.PasswordResetToken.used == 0,
+    ).update({"used": 1})
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=_RESET_TOKEN_TTL_MINUTES)
+    reset_token = models.PasswordResetToken(user_id=user.id, token=token, expires_at=expires_at)
+    db.add(reset_token)
+    db.commit()
+
+    reset_link = f"{_FRONTEND_URL}/reset-password?token={token}"
+
+    if not _SMTP_HOST or not _SMTP_USER:
+        # SMTP not configured — log the link for dev testing
+        logging.getLogger(__name__).warning("SMTP not configured. Reset link: %s", reset_link)
+        return {"detail": "If that email exists, a reset link has been sent.", "dev_reset_link": reset_link}
+
+    try:
+        _send_reset_email(user.email, reset_link)
+    except Exception as exc:
+        logging.getLogger(__name__).error("Failed to send reset email: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")
+
+    return {"detail": "If that email exists, a reset link has been sent."}
+
+
+@app.post("/api/auth/reset-password")
+@limiter.limit("10/minute")
+def reset_password(request: Request, body: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Verify a reset token and update the user's password."""
+    now = datetime.now(timezone.utc)
+    reset_token = (
+        db.query(models.PasswordResetToken)
+        .filter(
+            models.PasswordResetToken.token == body.token,
+            models.PasswordResetToken.used == 0,
+        )
+        .first()
+    )
+    if not reset_token:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
+
+    # Compare tz-aware datetimes
+    expires = reset_token.expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if now > expires:
+        reset_token.used = 1
+        db.commit()
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+
+    user = db.query(models.User).filter(models.User.id == reset_token.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid reset link.")
+
+    user.password_hash = hash_password(body.new_password)
+    reset_token.used = 1
+    db.commit()
+
+    return {"detail": "Password updated successfully. You can now log in."}
 
 
 @app.get("/api/auth/me")
@@ -572,7 +724,7 @@ async def export_resume(
 
     # ── Freemium gate for PDF downloads ───────────────────────────────────────
     if format == "pdf" and current_user:
-        _check_download_access(current_user)
+        _check_download_access(current_user, db)
 
     # Determine which sections to export
     sections = None
@@ -639,12 +791,29 @@ async def generate_export_direct(
     /api/record-download separately before hitting this endpoint.
     """
     if current_user:
-        _check_download_access(current_user)
+        _check_download_access(current_user)  # db not available here; monthly reset handled by record-download
     pdf_bytes = generate_resume_pdf(body.sections, template=body.template)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
+    )
+
+
+# ─── Direct DOCX export (always free, no paywall) ────────────────────────────
+
+@app.post("/api/export/generate-docx")
+async def generate_export_docx(body: DirectExportRequest):
+    """Generate an ATS-safe DOCX from raw sections JSON.
+
+    Always free — no download counter, no paywall. DOCX is the preferred
+    format for many ATS systems and is a trust signal for users.
+    """
+    docx_bytes = generate_resume_docx(body.sections)
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="resume.docx"'},
     )
 
 
@@ -679,6 +848,7 @@ async def create_order(
         status="PENDING",
         type="SUBSCRIPTION" if body.plan in ("basic", "pro") else "ONE_TIME",
         plan=body.plan,
+        # starter & lifetime are ONE_TIME payments that activate timed/permanent access
     )
     db.add(payment)
     db.commit()
@@ -707,16 +877,8 @@ async def verify_payment(
         payment.status = "SUCCESS"
         payment.payment_method = result.get("payment_method", "")
 
-        # Activate access
-        if payment.type == "ONE_TIME":
-            # Reset download counter — allow one more download
-            current_user.free_downloads_used = 0
-        else:
-            # Activate subscription
-            current_user.subscription_status = "ACTIVE"
-            current_user.subscription_plan = payment.plan
-            current_user.subscription_expiry = datetime.now(timezone.utc) + timedelta(days=30)
-
+        # Activate access based on plan
+        _activate_plan(current_user, payment)
         db.commit()
         return {"status": "SUCCESS", "plan": payment.plan, "type": payment.type}
 
@@ -759,12 +921,7 @@ async def cashfree_webhook(
         payment.status = "SUCCESS"
         user = db.query(models.User).filter(models.User.id == payment.user_id).first()
         if user:
-            if payment.type == "ONE_TIME":
-                user.free_downloads_used = 0
-            else:
-                user.subscription_status = "ACTIVE"
-                user.subscription_plan = payment.plan
-                user.subscription_expiry = datetime.now(timezone.utc) + timedelta(days=30)
+            _activate_plan(user, payment)
         db.commit()
 
     elif event_type in ("PAYMENT_FAILED_WEBHOOK", "PAYMENT_USER_DROPPED_WEBHOOK"):
@@ -779,9 +936,11 @@ def get_plans():
     """Return available pricing plans."""
     return {
         "plans": [
-            {"id": "one_time", "label": "Single Download", "amount": 199, "currency": "INR", "type": "ONE_TIME"},
-            {"id": "basic", "label": "Basic Monthly", "amount": 399, "currency": "INR", "type": "SUBSCRIPTION"},
-            {"id": "pro", "label": "Pro Monthly", "amount": 649, "currency": "INR", "type": "SUBSCRIPTION"},
+            {"id": "one_time", "label": "Top-Up",          "amount": 199,  "currency": "INR", "type": "ONE_TIME"},
+            {"id": "starter",  "label": "7-Day Access",    "amount": 49,   "currency": "INR", "type": "ONE_TIME"},
+            {"id": "basic",    "label": "Basic Monthly",   "amount": 399,  "currency": "INR", "type": "SUBSCRIPTION"},
+            {"id": "lifetime", "label": "Lifetime Access", "amount": 999,  "currency": "INR", "type": "ONE_TIME"},
+            {"id": "pro",      "label": "Pro Monthly",     "amount": 649,  "currency": "INR", "type": "SUBSCRIPTION"},
         ],
         "free_download_limit": FREE_DOWNLOAD_LIMIT,
     }
@@ -799,7 +958,8 @@ def record_download(
     Returns 402 if the user has no downloads left and no active subscription.
     On success, increments free_downloads_used and returns updated counts.
     """
-    _check_download_access(current_user)
+    _apply_monthly_reset(current_user, db)
+    _check_download_access(current_user, db)
 
     if _is_free_tier(current_user):
         current_user.free_downloads_used = (current_user.free_downloads_used or 0) + 1
@@ -811,6 +971,187 @@ def record_download(
         "free_downloads_used": current_user.free_downloads_used,
         "subscription_status": current_user.subscription_status,
     }
+
+
+# ─── Cover Letter ────────────────────────────────────────────────────────────
+
+class CoverLetterRequest(BaseModel):
+    resume_id: int
+    job_description: str = Field(max_length=8000)
+    company: str = Field(max_length=200)
+    tone: str = Field(default="professional", pattern="^(professional|enthusiastic|concise)$")
+
+
+@app.post("/api/cover-letter/generate")
+@limiter.limit("10/minute")
+async def generate_cover_letter(
+    request: Request,
+    body: CoverLetterRequest,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """Generate a cover letter from resume data + job description."""
+    resume = _get_resume_or_404(body.resume_id, db)
+    _check_resume_ownership(resume, current_user)
+
+    gen = (
+        db.query(models.GeneratedResume)
+        .filter(models.GeneratedResume.resume_id == body.resume_id)
+        .order_by(models.GeneratedResume.created_at.desc())
+        .first()
+    )
+    sections = _safe_json(gen.optimized_sections) if gen else _safe_json(resume.parsed_sections)
+
+    tone_instruction = {
+        "professional": "formal, confident, and polished",
+        "enthusiastic": "energetic, passionate, and excited about the opportunity",
+        "concise": "brief, direct, and to the point — 3 short paragraphs maximum",
+    }[body.tone]
+
+    contact = sections.get("contact", sections.get("personal", {}))
+    name = contact.get("name", "the applicant")
+    summary = sections.get("summary", "")
+    exp_list = sections.get("experience", [])
+    top_exp = exp_list[0] if exp_list else {}
+    skills = sections.get("skills", {})
+    all_skills = []
+    for k in ("languages", "frameworks", "tools", "databases", "other"):
+        all_skills.extend(skills.get(k, []))
+
+    sections_snippet = json.dumps({
+        "name": name,
+        "summary": summary[:400],
+        "most_recent_role": f"{top_exp.get('title', '')} at {top_exp.get('company', '')}",
+        "key_skills": all_skills[:12],
+    })
+
+    prompt = f"""You are an expert cover letter writer. Write a compelling cover letter for {name} applying to {body.company or "the company"}.
+
+Tone: {tone_instruction}
+
+Candidate summary:
+{sections_snippet}
+
+Job description:
+{body.job_description[:1200]}
+
+Instructions:
+- Write exactly 3 paragraphs
+- Paragraph 1: Express interest in the role + brief positioning statement
+- Paragraph 2: Highlight 2–3 specific achievements/skills that match the JD
+- Paragraph 3: Call to action — express enthusiasm and request an interview
+- Do NOT include any header, salutation, or sign-off — just the 3 paragraphs
+- Return ONLY the cover letter text, no markdown, no extra commentary
+"""
+    try:
+        from gemini_service import _generate
+        result = await _generate(prompt)
+        cover_letter = result if result else "Unable to generate cover letter. Please try again."
+    except Exception as exc:
+        logger.warning("Cover letter generation failed: %s", exc)
+        cover_letter = "Unable to generate cover letter. Please try again."
+
+    return {"cover_letter": cover_letter}
+
+
+# ─── Resume Versions ──────────────────────────────────────────────────────────
+
+class SaveVersionRequest(BaseModel):
+    name: str = Field(max_length=100)
+
+
+@app.post("/api/resume/{resume_id}/versions")
+def save_resume_version(
+    resume_id: int,
+    body: SaveVersionRequest,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """Save current optimized sections as a named version."""
+    resume = _get_resume_or_404(resume_id, db)
+    _check_resume_ownership(resume, current_user)
+
+    gen = (
+        db.query(models.GeneratedResume)
+        .filter(models.GeneratedResume.resume_id == resume_id)
+        .order_by(models.GeneratedResume.created_at.desc())
+        .first()
+    )
+    sections_json = gen.optimized_sections if gen else resume.parsed_sections or "{}"
+
+    version = models.ResumeVersion(
+        resume_id=resume_id,
+        name=body.name,
+        sections_json=sections_json,
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+
+    return {
+        "id": version.id,
+        "name": version.name,
+        "resume_id": version.resume_id,
+        "created_at": version.created_at.isoformat(),
+    }
+
+
+@app.get("/api/resume/{resume_id}/versions")
+def list_resume_versions(
+    resume_id: int,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """List all saved versions for a resume."""
+    resume = _get_resume_or_404(resume_id, db)
+    _check_resume_ownership(resume, current_user)
+
+    versions = (
+        db.query(models.ResumeVersion)
+        .filter(models.ResumeVersion.resume_id == resume_id)
+        .order_by(models.ResumeVersion.created_at.desc())
+        .all()
+    )
+    return {
+        "versions": [
+            {"id": v.id, "name": v.name, "created_at": v.created_at.isoformat()}
+            for v in versions
+        ]
+    }
+
+
+@app.post("/api/resume/{resume_id}/versions/{version_id}/restore")
+def restore_resume_version(
+    resume_id: int,
+    version_id: int,
+    current_user: Optional[models.User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
+    """Restore a saved version's sections back to the resume's latest generated record."""
+    resume = _get_resume_or_404(resume_id, db)
+    _check_resume_ownership(resume, current_user)
+
+    version = db.query(models.ResumeVersion).filter(
+        models.ResumeVersion.id == version_id,
+        models.ResumeVersion.resume_id == resume_id,
+    ).first()
+    if not version:
+        raise HTTPException(status_code=404, detail="Version not found.")
+
+    gen = (
+        db.query(models.GeneratedResume)
+        .filter(models.GeneratedResume.resume_id == resume_id)
+        .order_by(models.GeneratedResume.created_at.desc())
+        .first()
+    )
+    if gen:
+        gen.optimized_sections = version.sections_json
+        db.commit()
+    else:
+        resume.parsed_sections = version.sections_json
+        db.commit()
+
+    return {"sections": _safe_json(version.sections_json)}
 
 
 # ─── Web Search ──────────────────────────────────────────────────────────────
@@ -828,6 +1169,29 @@ async def web_search(
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
+
+def _activate_plan(user: models.User, payment: models.Payment) -> None:
+    """Apply the correct access grant based on the plan purchased."""
+    plan = payment.plan
+    if plan == "one_time":
+        # Top-up: reset monthly counter so they get their PDF
+        user.free_downloads_used = 0
+    elif plan == "starter":
+        # 7-day full access
+        user.subscription_status = "ACTIVE"
+        user.subscription_plan = "starter"
+        user.subscription_expiry = datetime.now(timezone.utc) + timedelta(days=7)
+    elif plan == "lifetime":
+        # Permanent access — expiry stays NULL (never expires)
+        user.subscription_status = "ACTIVE"
+        user.subscription_plan = "lifetime"
+        user.subscription_expiry = None
+    else:
+        # basic / pro — 30-day rolling subscription
+        user.subscription_status = "ACTIVE"
+        user.subscription_plan = plan
+        user.subscription_expiry = datetime.now(timezone.utc) + timedelta(days=30)
+
 
 def _get_resume_or_404(resume_id: int, db: Session) -> models.Resume:
     resume = db.query(models.Resume).filter(models.Resume.id == resume_id).first()
@@ -852,17 +1216,29 @@ def _is_free_tier(user: models.User) -> bool:
     return True
 
 
-def _check_download_access(user: models.User) -> None:
+def _apply_monthly_reset(user: models.User, db: Session) -> None:
+    """Reset free download counter if we're in a new calendar month."""
+    now = datetime.now(timezone.utc)
+    reset_date = user.free_downloads_reset_date
+    if reset_date is None or (now.year, now.month) != (reset_date.year, reset_date.month):
+        user.free_downloads_used = 0
+        user.free_downloads_reset_date = now
+        db.commit()
+
+
+def _check_download_access(user: models.User, db: Session = None) -> None:
     """Raises 402 Payment Required if user has exhausted free downloads and has no active subscription."""
     if not _is_free_tier(user):
         return  # subscriber — allow
+    if db is not None:
+        _apply_monthly_reset(user, db)
     if (user.free_downloads_used or 0) < FREE_DOWNLOAD_LIMIT:
         return  # still within free tier
     raise HTTPException(
         status_code=402,
         detail={
             "code": "PAYMENT_REQUIRED",
-            "message": f"You have used your {FREE_DOWNLOAD_LIMIT} free PDF download(s). Purchase a plan to continue.",
+            "message": f"You have used your {FREE_DOWNLOAD_LIMIT} free PDF downloads this month. Purchase a plan to continue.",
             "plans_url": "/api/payments/plans",
         },
     )

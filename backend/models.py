@@ -18,6 +18,7 @@ class User(Base):
     profile_photo_url = Column(String, nullable=True)
 
     free_downloads_used = Column(Integer, default=0)
+    free_downloads_reset_date = Column(DateTime, nullable=True)
     subscription_status = Column(String, default="FREE")   # FREE | ACTIVE | EXPIRED | CANCELLED
     subscription_plan = Column(String, nullable=True)      # monthly | yearly
     subscription_expiry = Column(DateTime, nullable=True)
@@ -73,6 +74,27 @@ class Payment(Base):
     status = Column(String, default="PENDING")             # PENDING | SUCCESS | FAILED
     type = Column(String, default="ONE_TIME")              # ONE_TIME | SUBSCRIPTION
     plan = Column(String, nullable=True)                   # basic | pro (for subscriptions)
+    created_at = Column(DateTime, default=_now)
+
+
+class ResumeVersion(Base):
+    __tablename__ = "resume_versions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    resume_id = Column(Integer, ForeignKey("resumes.id"), index=True)
+    name = Column(String, nullable=False)
+    sections_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=_now)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Integer, default=0)   # 0 = unused, 1 = consumed
     created_at = Column(DateTime, default=_now)
 
 

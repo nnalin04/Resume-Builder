@@ -28,12 +28,14 @@ BASE_URL = (
 # ─── Pricing ──────────────────────────────────────────────────────────────────
 
 PLANS = {
-    "one_time": {"amount": 199.0, "currency": "INR", "label": "Single Download"},
-    "basic":    {"amount": 399.0, "currency": "INR", "label": "Basic Monthly"},
-    "pro":      {"amount": 649.0, "currency": "INR", "label": "Pro Monthly"},
+    "one_time": {"amount": 199.0,  "currency": "INR", "label": "Single Download"},
+    "starter":  {"amount": 49.0,   "currency": "INR", "label": "7-Day Access"},
+    "basic":    {"amount": 399.0,  "currency": "INR", "label": "Basic Monthly"},
+    "lifetime": {"amount": 999.0,  "currency": "INR", "label": "Lifetime Access"},
+    "pro":      {"amount": 649.0,  "currency": "INR", "label": "Pro Monthly"},
 }
 
-FREE_DOWNLOAD_LIMIT = 1
+FREE_DOWNLOAD_LIMIT = 3
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 

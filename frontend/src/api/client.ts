@@ -65,6 +65,18 @@ export const api = {
       }),
 
     me: () => request<AuthUser>('/api/auth/me'),
+
+    forgotPassword: (email: string) =>
+      request<{ detail: string; dev_reset_link?: string }>('/api/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      }),
+
+    resetPassword: (token: string, new_password: string) =>
+      request<{ detail: string }>('/api/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, new_password }),
+      }),
   },
 
   recordDownload: () =>
@@ -134,6 +146,34 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ text, instruction, context: context ?? '' }),
     }),
+
+  listResumes: (page = 1, pageSize = 50) =>
+    request<{ items: { id: number; filename: string; created_at: string; has_parsed_sections: boolean }[]; total: number }>(
+      `/api/resumes?page=${page}&page_size=${pageSize}`
+    ),
+
+  generateCoverLetter: (resumeId: number, jobDescription: string, company: string, tone: string) =>
+    request<{ cover_letter: string }>('/api/cover-letter/generate', {
+      method: 'POST',
+      body: JSON.stringify({ resume_id: resumeId, job_description: jobDescription, company, tone }),
+    }),
+
+  saveVersion: (resumeId: number, name: string) =>
+    request<{ id: number; name: string; resume_id: number; created_at: string }>(
+      `/api/resume/${resumeId}/versions`,
+      { method: 'POST', body: JSON.stringify({ name }) }
+    ),
+
+  listVersions: (resumeId: number) =>
+    request<{ versions: { id: number; name: string; created_at: string }[] }>(
+      `/api/resume/${resumeId}/versions`
+    ),
+
+  restoreVersion: (resumeId: number, versionId: number) =>
+    request<{ sections: any }>(
+      `/api/resume/${resumeId}/versions/${versionId}/restore`,
+      { method: 'POST' }
+    ),
 };
 
 export interface Plan {

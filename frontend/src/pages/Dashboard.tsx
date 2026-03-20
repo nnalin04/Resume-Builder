@@ -14,7 +14,13 @@ import TemplateModern from '../templates/TemplateModern';
 import TemplateProfessional from '../templates/TemplateProfessional';
 import TemplateTwoColumn from '../templates/TemplateTwoColumn';
 import TemplateClean from '../templates/TemplateClean';
-import { exportToPDF } from '../utils/pdfExport';
+import TemplateMinimal from '../templates/TemplateMinimal';
+import TemplateExecutive from '../templates/TemplateExecutive';
+import TemplateTech from '../templates/TemplateTech';
+import TemplateFinance from '../templates/TemplateFinance';
+import TemplateCreative from '../templates/TemplateCreative';
+import OnboardingWizard from '../components/OnboardingWizard';
+import { exportToPDF, exportToDOCX } from '../utils/pdfExport';
 import { mapExperiences, mapEducation, mapProjects, mapCertifications, flattenSkills } from '../utils/sectionMappers';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
@@ -74,14 +80,24 @@ const TEMPLATE_COLORS: Record<TemplateId, string> = {
   professional: '#6366f1',
   twocolumn:    '#059669',
   clean:        '#64748b',
+  minimal:      '#9ca3af',
+  executive:    '#1e2d4e',
+  tech:         '#0d9488',
+  finance:      '#1a2744',
+  creative:     '#e05c5c',
 };
 
 const TEMPLATES: { id: TemplateId; label: string }[] = [
-  { id: 'classic', label: 'Classic' },
-  { id: 'modern', label: 'Modern' },
+  { id: 'classic',      label: 'Classic' },
+  { id: 'modern',       label: 'Modern' },
   { id: 'professional', label: 'Professional' },
-  { id: 'twocolumn', label: 'Two Column' },
-  { id: 'clean', label: 'Clean' },
+  { id: 'twocolumn',    label: 'Two Column' },
+  { id: 'clean',        label: 'Clean' },
+  { id: 'minimal',      label: 'Minimal' },
+  { id: 'executive',    label: 'Executive' },
+  { id: 'tech',         label: 'Tech' },
+  { id: 'finance',      label: 'Finance' },
+  { id: 'creative',     label: 'Creative' },
 ];
 
 const RESUME_W = 794;
@@ -186,6 +202,7 @@ export default function Dashboard() {
     experience: false, projects: false, education: false, certifications: false,
   });
   const [exporting, setExporting] = useState(false);
+  const [exportingDocx, setExportingDocx] = useState(false);
   const [exportError, setExportError] = useState('');
   const [openJD, setOpenJD] = useState(false);
   const [editorWidth, setEditorWidth] = useState(420);
@@ -294,6 +311,20 @@ export default function Dashboard() {
       }
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDocxExport = async () => {
+    setExportingDocx(true);
+    setExportError('');
+    try {
+      const sections = resumeDataToSections(resume.resumeData);
+      const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
+      await exportToDOCX(sections, name);
+    } catch (err: unknown) {
+      setExportError(err instanceof Error ? err.message : 'DOCX export failed');
+    } finally {
+      setExportingDocx(false);
     }
   };
 
@@ -476,18 +507,101 @@ export default function Dashboard() {
   };
 
   const isSubscriber = user?.subscription_status === 'ACTIVE';
-  const freeLeft = user ? Math.max(0, 1 - (user.free_downloads_used ?? 0)) : null;
+  const freeLeft = user ? Math.max(0, 3 - (user.free_downloads_used ?? 0)) : null;
+
+  // Version management state
+  const [showVersionInput, setShowVersionInput] = useState(false);
+  const [versionName, setVersionName] = useState('');
+  const [isSavingVersion, setIsSavingVersion] = useState(false);
+  const [versions, setVersions] = useState<{ id: number; name: string; created_at: string }[]>([]);
+  const [showVersions, setShowVersions] = useState(false);
+  const [isLoadingVersions, setIsLoadingVersions] = useState(false);
+
+  // Onboarding wizard
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('resume_onboarding_done'));
+
+  const handleSaveVersion = async () => {
+    if (!backendResumeId || !versionName.trim()) return;
+    setIsSavingVersion(true);
+    try {
+      await api.saveVersion(backendResumeId, versionName.trim());
+      setVersionName('');
+      setShowVersionInput(false);
+      addToast('Version saved!', 'success');
+    } catch {
+      addToast('Failed to save version.', 'error');
+    } finally {
+      setIsSavingVersion(false);
+    }
+  };
+
+  const handleLoadVersions = async () => {
+    if (!backendResumeId) { addToast('Import a PDF first to use versions.', 'info'); return; }
+    setShowVersions(v => !v);
+    if (!showVersions) {
+      setIsLoadingVersions(true);
+      try {
+        const res = await api.listVersions(backendResumeId);
+        setVersions(res.versions);
+      } catch {
+        addToast('Failed to load versions.', 'error');
+      } finally {
+        setIsLoadingVersions(false);
+      }
+    }
+  };
+
+  const handleRestoreVersion = async (versionId: number) => {
+    if (!backendResumeId) return;
+    try {
+      const res = await api.restoreVersion(backendResumeId, versionId);
+      const s = res.sections;
+      if (s) {
+        if (s.summary) resume.updateSummary(s.summary);
+        if (s.skills) resume.updateSkills(typeof s.skills === 'string' ? s.skills : Object.values(s.skills).flat().join(', '));
+        if (Array.isArray(s.experience) && s.experience.length > 0) resume.replaceExperiences(mapExperiences(s.experience));
+        if (Array.isArray(s.education) && s.education.length > 0) resume.replaceEducation(mapEducation(s.education));
+        if (Array.isArray(s.projects) && s.projects.length > 0) resume.replaceProjects(mapProjects(s.projects));
+      }
+      addToast('Version restored!', 'success');
+      setShowVersions(false);
+    } catch {
+      addToast('Failed to restore version.', 'error');
+    }
+  };
 
   const PreviewComponent = {
-    classic: TemplateClassic,
-    modern: TemplateModern,
+    classic:      TemplateClassic,
+    modern:       TemplateModern,
     professional: TemplateProfessional,
-    twocolumn: TemplateTwoColumn,
-    clean: TemplateClean,
+    twocolumn:    TemplateTwoColumn,
+    clean:        TemplateClean,
+    minimal:      TemplateMinimal,
+    executive:    TemplateExecutive,
+    tech:         TemplateTech,
+    finance:      TemplateFinance,
+    creative:     TemplateCreative,
   }[template];
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 font-sans">
+
+      {/* ─── Onboarding Wizard ────────────────────────────────────────────── */}
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={(templateId, file, targetRole) => {
+            setShowOnboarding(false);
+            setTemplate(templateId);
+            if (targetRole) setJobDescription(targetRole);
+            if (file) {
+              const dt = new DataTransfer();
+              dt.items.add(file);
+              const fakeEvent = { target: { files: dt.files } } as unknown as React.ChangeEvent<HTMLInputElement>;
+              handlePdfUpload(fakeEvent);
+            }
+          }}
+        />
+      )}
 
       {/* ─── Toast Container ──────────────────────────────────────────────── */}
       {toasts.length > 0 && (
@@ -546,12 +660,32 @@ export default function Dashboard() {
             </div>
           )}
 
+          <Link
+            to="/cover-letter"
+            style={{ fontSize: 13, fontWeight: 600, color: '#6366f1', textDecoration: 'none', padding: '4px 10px', borderRadius: 8, border: '1px solid #e0e7ff', background: '#eef2ff' }}
+          >
+            Cover Letter
+          </Link>
+
           {user && !isSubscriber && freeLeft !== null && (
             <span className={`hidden sm:flex px-3 py-1 text-xs font-semibold rounded-full items-center gap-1 ${freeLeft > 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-              {freeLeft > 0 ? `${freeLeft} free download left` : '0 free downloads left'}
+              {freeLeft > 0 ? `${freeLeft} of 3 free downloads this month` : '0 of 3 free downloads this month'}
               {freeLeft === 0 && <Link to="/pricing" className="ml-1 text-brand-600 hover:underline">Upgrade</Link>}
             </span>
           )}
+
+          <button
+            onClick={handleDocxExport}
+            disabled={exportingDocx}
+            title="Download as Word document — always free, ATS-safe"
+            className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border transition-all ${exportingDocx ? 'border-slate-300 text-slate-400 cursor-wait' : 'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'}`}
+          >
+            {exportingDocx
+              ? <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            }
+            <span>{exportingDocx ? '...' : 'DOCX'}</span>
+          </button>
 
           <button
             onClick={handleExport}
@@ -622,6 +756,35 @@ export default function Dashboard() {
                 >
                   {isOptimizing ? '✨ Optimizing...' : '✨ Optimize'}
                 </button>
+
+                {/* Save Version */}
+                {!showVersionInput ? (
+                  <button
+                    onClick={() => { if (backendResumeId) setShowVersionInput(true); }}
+                    disabled={!backendResumeId}
+                    title={!backendResumeId ? 'Upload a PDF resume to enable version history' : 'Save current resume as a named version'}
+                    className="text-xs font-bold bg-white text-slate-500 border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-slate-50 transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    🔖 Save Version
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <input
+                      autoFocus
+                      value={versionName}
+                      onChange={e => setVersionName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveVersion(); if (e.key === 'Escape') setShowVersionInput(false); }}
+                      placeholder="Version name…"
+                      style={{ fontSize: 12, padding: '4px 8px', border: '1px solid #c7d2fe', borderRadius: 8, outline: 'none', width: 130 }}
+                    />
+                    <button
+                      onClick={handleSaveVersion}
+                      disabled={isSavingVersion || !versionName.trim()}
+                      style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, border: 'none', background: '#6366f1', color: '#fff', cursor: 'pointer', opacity: isSavingVersion ? 0.6 : 1 }}
+                    >{isSavingVersion ? '…' : 'Save'}</button>
+                    <button onClick={() => setShowVersionInput(false)} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', color: '#64748b' }}>✕</button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -684,6 +847,48 @@ export default function Dashboard() {
                 </div>
               )}
             </div>}
+
+            {/* Version History */}
+            <div style={{ borderBottom: '1px solid #e2e8f0' }}>
+              <button
+                onClick={handleLoadVersions}
+                disabled={!backendResumeId}
+                title={!backendResumeId ? 'Upload a PDF resume to enable version history' : undefined}
+                style={{
+                  width: '100%', padding: '12px 20px', background: 'none', border: 'none',
+                  cursor: backendResumeId ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontSize: 13, fontWeight: 600, color: backendResumeId ? '#64748b' : '#cbd5e1',
+                  opacity: backendResumeId ? 1 : 0.5,
+                }}
+              >
+                <span>🔖 Version History</span>
+                <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400 }}>{showVersions ? '▲ hide' : '▼ show'}</span>
+              </button>
+              {showVersions && (
+                <div style={{ padding: '0 16px 12px' }}>
+                  {isLoadingVersions ? (
+                    <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>Loading…</div>
+                  ) : versions.length === 0 ? (
+                    <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 0' }}>No saved versions yet. Use "🔖 Save Version" above.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {versions.map(v => (
+                        <div key={v.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>{v.name}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(v.created_at).toLocaleString()}</div>
+                          </div>
+                          <button
+                            onClick={() => handleRestoreVersion(v.id)}
+                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 7, border: '1px solid #c7d2fe', background: '#eef2ff', color: '#6366f1', cursor: 'pointer' }}
+                          >Restore</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Personal Info */}
             <SectionHeader title="Personal Information" open={openSections.personal} onToggle={() => toggleSection('personal')} />

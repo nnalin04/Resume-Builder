@@ -50,4 +50,4 @@ export interface ResumeData {
   certifications: Certification[];
 }
 
-export type TemplateId = 'classic' | 'modern' | 'professional' | 'twocolumn' | 'clean';
+export type TemplateId = 'classic' | 'modern' | 'professional' | 'twocolumn' | 'clean' | 'minimal' | 'executive' | 'tech' | 'finance' | 'creative';

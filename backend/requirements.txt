@@ -21,6 +21,8 @@ bcrypt==5.0.0
 httpx==0.28.1
 # Payments
 cashfree-pg>=4.0.0
+# DOCX export
+python-docx>=1.1.0
 
 # Dev / test only — do not install in production
 # pip install pytest pytest-asyncio httpx
