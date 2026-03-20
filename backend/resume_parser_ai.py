@@ -14,20 +14,24 @@ from typing import Optional
 # ─── Section header detection ─────────────────────────────────────────────────
 
 SECTION_MAP = {
-    "experience":      re.compile(r"^(work\s+)?experience|employment(\s+history)?|professional\s+background", re.I),
-    "education":       re.compile(r"^education(al)?(\s+background)?|academic|qualifications?", re.I),
-    "skills":          re.compile(r"^(technical\s+)?skills?(\s+&\s+expertise)?|competencies|technologies", re.I),
-    "projects":        re.compile(r"^projects?(\s+&\s+achievements?)?|personal\s+projects?|key\s+projects?", re.I),
-    "certifications":  re.compile(r"^certifications?|certificates?|credentials?|licenses?|awards?", re.I),
-    "summary":         re.compile(r"^(professional\s+)?summary|profile|objective|about(\s+me)?|overview", re.I),
+    # FIX: wrap all alternatives in outer group so ^ anchors all of them
+    "experience":     re.compile(r"^((work\s+)?experience|employment(\s+history)?|professional\s+background|work\s+history)", re.I),
+    "education":      re.compile(r"^(education(al)?(\s+background)?|academic(\s+background)?|qualifications?)", re.I),
+    "skills":         re.compile(r"^((technical\s+)?skills?(\s+&\s+(expertise|tools))?|competencies|technologies(\s+&\s+tools)?|core\s+competencies)", re.I),
+    "projects":       re.compile(r"^(projects?(\s+&\s+achievements?)?|personal\s+projects?|key\s+projects?|side\s+projects?|academic\s+projects?)", re.I),
+    "certifications": re.compile(r"^(certifications?|certificates?|credentials?|licenses?|awards?(\s+&\s+honors?)?)", re.I),
+    "summary":        re.compile(r"^((professional\s+)?summary|profile|objective|about(\s+me)?|overview|career\s+(summary|objective))", re.I),
 }
 
 # ─── Regex patterns ───────────────────────────────────────────────────────────
 
 EMAIL_RE    = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
 PHONE_RE    = re.compile(r"(\+?\d[\d\s\-().]{6,}\d)")
-LINKEDIN_RE = re.compile(r"(linkedin\.com/in/[\w\-]+)", re.I)
-GITHUB_RE   = re.compile(r"(github\.com/[\w\-]+)", re.I)
+
+# FIX: capture full URL including optional https://www. prefix
+LINKEDIN_RE = re.compile(r"(?:https?://)?(?:www\.)?linkedin\.com/in/[\w\-]+", re.I)
+GITHUB_RE   = re.compile(r"(?:https?://)?(?:www\.)?github\.com/[\w\-]+", re.I)
+WEBSITE_RE  = re.compile(r"https?://(?!(?:www\.)?(?:linkedin|github)\.com)[\w\-\.]+\.[a-z]{2,}(?:/[\w\-\./?=&%#]*)?", re.I)
 
 # Date range: "Nov 2022 - Present"  /  "Jan 2021 – Aug 2022"  /  "2019 - 2022"
 DATE_RANGE_RE = re.compile(
@@ -71,14 +75,28 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _normalize_url(url: str) -> str:
+    """Ensure URL has https:// prefix."""
+    url = url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    return url
+
+
 # ─── Section splitter ─────────────────────────────────────────────────────────
 
+# Strip leading/trailing non-letter characters (ASCII decorators + Unicode box-drawing U+2500-U+257F)
+_DECORATOR_RE = re.compile(r"^[^a-zA-Z]+|[^a-zA-Z0-9\s]+$")
+
+
 def _is_section_header(line: str) -> Optional[str]:
-    s = line.strip().rstrip(":").strip()
-    if not s or len(s) > 50:
+    # FIX: strip decorator/non-letter chars, increase length limit to 60
+    s = _DECORATOR_RE.sub("", line).strip()
+    if not s or len(s) > 60:
         return None
+    # FIX: use fullmatch so "employment is growing" doesn't match "employment" pattern
     for key, pat in SECTION_MAP.items():
-        if pat.match(s):
+        if pat.fullmatch(s):
             return key
     return None
 
@@ -99,28 +117,42 @@ def _split_sections(lines: list[str]) -> dict[str, list[str]]:
 # ─── Contact ──────────────────────────────────────────────────────────────────
 
 def _extract_contact(lines: list[str]) -> dict:
-    # Name = first non-empty line
+    # FIX: expand name search to first 10 lines, skip headers/emails/phones/links
     name = ""
-    for ln in lines[:5]:
+    for ln in lines[:10]:
         s = ln.strip()
-        if s and not EMAIL_RE.search(s) and not PHONE_RE.search(s):
-            name = s
-            break
+        if not s or len(s) < 2:
+            continue
+        if EMAIL_RE.search(s):
+            continue
+        if PHONE_RE.search(s):
+            continue
+        if LINKEDIN_RE.search(s) or GITHUB_RE.search(s):
+            continue
+        if _is_section_header(s):
+            break  # hit a real section — name must have appeared before this
+        name = s
+        break
 
-    full_header = " ".join(lines[:10])
+    # FIX: search first 20 lines for email/phone (they're almost always in the header)
+    full_header = " ".join(lines[:20])
 
-    email    = EMAIL_RE.search(full_header)
-    phone    = PHONE_RE.search(full_header)
-    linkedin = LINKEDIN_RE.search(full_header)
-    github   = GITHUB_RE.search(full_header)
+    email = EMAIL_RE.search(full_header)
+    phone = PHONE_RE.search(full_header)
 
-    # Location: first short word before the email on the contact line
+    # FIX: search the entire document for LinkedIn/GitHub (sometimes at bottom of header
+    # or in a separate "Links" block further down the page)
+    full_text = " ".join(lines)
+    linkedin  = LINKEDIN_RE.search(full_text)
+    github    = GITHUB_RE.search(full_text)
+    website   = WEBSITE_RE.search(full_text)
+
+    # Location: first short word(s) before the email/phone on the contact line
     location = ""
-    for ln in lines[:5]:
+    for ln in lines[:10]:
         s = ln.strip()
         if EMAIL_RE.search(s) or PHONE_RE.search(s):
             parts = s.split()
-            # location is the token(s) before the email / phone
             loc_parts = []
             for p in parts:
                 if EMAIL_RE.match(p) or PHONE_RE.match(p) or p.lower() in ("linkedin","github","leetcode"):
@@ -131,12 +163,13 @@ def _extract_contact(lines: list[str]) -> dict:
 
     return {
         "name":     name,
-        "email":    email.group(0)              if email    else "",
-        "phone":    _clean(phone.group(0))      if phone    else "",
+        "email":    email.group(0)                              if email    else "",
+        "phone":    _clean(phone.group(0))                     if phone    else "",
         "location": location,
-        "linkedin": linkedin.group(0)           if linkedin else "",
-        "github":   github.group(0)             if github   else "",
-        "website":  "",
+        # FIX: normalize URLs to always include https://
+        "linkedin": _normalize_url(linkedin.group(0))          if linkedin else "",
+        "github":   _normalize_url(github.group(0))            if github   else "",
+        "website":  website.group(0)                           if website  else "",
     }
 
 
