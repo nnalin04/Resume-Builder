@@ -30,4 +30,4 @@ frontend/.vite/
 **/.DS_Store
 
 # Claude memory (local only)
-.claude/projects/
+.claude/
