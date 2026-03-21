@@ -5,8 +5,14 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$REPO_DIR/backend/.env"
-SECRET="8825c06df346d85672ff8994209af0702640b3970dbd9e3655ff18bc3a4be191"
 FRONTEND_ORIGIN="${1:-https://resume-builder-black-nu.vercel.app}"
+
+# Use existing secret from .env if present, otherwise generate a secure random one
+if [ -f "$ENV_FILE" ] && grep -q "^BACKEND_SECRET=" "$ENV_FILE"; then
+    SECRET=$(grep "^BACKEND_SECRET=" "$ENV_FILE" | cut -d= -f2)
+else
+    SECRET=$(openssl rand -hex 32)
+fi
 
 echo "=== Oracle backend setup ==="
 echo "Repo dir : $REPO_DIR"
@@ -22,12 +28,13 @@ echo ""
 echo "→ Updating .env..."
 
 if grep -q "^BACKEND_SECRET=" "$ENV_FILE" 2>/dev/null; then
+    # Ensure it's correctly set (e.g. replacing any existing placeholder)
     sed -i "s|^BACKEND_SECRET=.*|BACKEND_SECRET=$SECRET|" "$ENV_FILE"
-    echo "  BACKEND_SECRET updated"
+    echo "  BACKEND_SECRET preserved/updated"
 else
     echo "" >> "$ENV_FILE"
     echo "BACKEND_SECRET=$SECRET" >> "$ENV_FILE"
-    echo "  BACKEND_SECRET added"
+    echo "  BACKEND_SECRET generated and added"
 fi
 
 if [ -n "$FRONTEND_ORIGIN" ]; then
