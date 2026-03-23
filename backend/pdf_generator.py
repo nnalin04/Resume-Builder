@@ -1,16 +1,12 @@
 """
-ATS-safe single-page PDF generator using reportlab.
+Multi-page ATS-safe PDF generator using reportlab.
 
 Templates:
   classic   — Times-Roman, traditional section headers with underlines
   modern    — Helvetica, minimal, tight spacing with subtle dividers
   technical — Helvetica, skills-first emphasis, monospace skill tags
 
-All output is constrained to one page via:
-  - compact margins (0.45")
-  - reduced font sizes and leading
-  - max 5 bullets per role (top bullets kept)
-  - project descriptions trimmed to 1 sentence
+Content flows naturally across pages — no artificial caps on bullets or sections.
 """
 import io
 from reportlab.lib.pagesizes import letter
@@ -18,7 +14,7 @@ from reportlab.lib.units import inch
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, KeepTogether
 
 
 # ─── Color Palettes ───────────────────────────────────────────────────────────
@@ -141,20 +137,18 @@ def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
         story.append(Paragraph("EXPERIENCE", styles["section_header"]))
         story += _divider(styles)
         for job in experience:
-            story.append(Paragraph(
-                _safe(f"{job.get('title','')}  —  {job.get('company','')}"),
-                styles["job_title"]))
             meta = []
             if job.get("location"):
                 meta.append(_safe(job["location"]))
             meta.append(_safe(f"{job.get('start_date','')} – {job.get('end_date','Present')}"))
-            story.append(Paragraph("  |  ".join(meta), styles["job_meta"]))
-            # Cap at 5 bullets — keep the ones with numbers first (most impactful)
-            bullets = job.get("bullets", [])
-            ranked = sorted(bullets, key=lambda b: bool(__import__("re").search(r"\d", b)), reverse=True)
-            for b in ranked[:5]:
+            entry = [
+                Paragraph(_safe(f"{job.get('title','')}  —  {job.get('company','')}"), styles["job_title"]),
+                Paragraph("  |  ".join(meta), styles["job_meta"]),
+            ]
+            for b in job.get("bullets", []):
                 if b:
-                    story.append(Paragraph(f"• {_safe(b)}", styles["bullet"]))
+                    entry.append(Paragraph(f"• {_safe(b)}", styles["bullet"]))
+            story.append(KeepTogether(entry))
 
     # ── Education ─────────────────────────────────────────────────────────────
     education = sections.get("education", [])
@@ -165,13 +159,15 @@ def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
             degree = edu.get("degree", "")
             field  = edu.get("field", "")
             deg_line = degree if (not field or field.lower() in degree.lower()) else f"{degree} in {field}"
-            story.append(Paragraph(_safe(deg_line), styles["job_title"]))
             meta = _safe(edu.get("institution", ""))
             if edu.get("graduation_date"):
                 meta += f"  |  {_safe(edu['graduation_date'])}"
             if edu.get("gpa"):
                 meta += f"  |  GPA: {_safe(edu['gpa'])}"
-            story.append(Paragraph(meta, styles["job_meta"]))
+            story.append(KeepTogether([
+                Paragraph(_safe(deg_line), styles["job_title"]),
+                Paragraph(meta, styles["job_meta"]),
+            ]))
 
     # ── Skills (classic + modern) ──────────────────────────────────────────
     if template != "technical":
@@ -182,12 +178,16 @@ def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
     if projects:
         story.append(Paragraph("PROJECTS", styles["section_header"]))
         story += _divider(styles)
-        for proj in projects[:2]:
+        for proj in projects:
             name = _safe(proj.get("name", ""))
-            story.append(Paragraph(name, styles["job_title"]))
+            entry = [Paragraph(name, styles["job_title"])]
             desc = proj.get("description", "")
             if desc:
-                story.append(Paragraph(f"• {_safe(_first_sentence(desc))}", styles["bullet"]))
+                entry.append(Paragraph(f"• {_safe(desc)}", styles["bullet"]))
+            tech = proj.get("tech_stack", [])
+            if tech:
+                entry.append(Paragraph(f"<b>Tech:</b> {_safe(', '.join(tech))}", styles["body"]))
+            story.append(KeepTogether(entry))
 
     # ── Certifications ────────────────────────────────────────────────────────
     certs = sections.get("certifications", [])

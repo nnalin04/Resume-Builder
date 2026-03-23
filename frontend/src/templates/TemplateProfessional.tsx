@@ -49,8 +49,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
       color: '#1e293b',
       background: '#fff',
       width: '794px',
-      height: '1123px',
-      overflow: 'hidden',
+      minHeight: '1123px',
       display: 'flex',
       flexDirection: 'column' as const,
       lineHeight: 1.38,
@@ -85,7 +84,6 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
 
         {/* Left sidebar */}
         <div style={{ width: '36%', background: '#1e3a5f', padding: '15px 22px 22px', color: '#fff', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
-
           {skills && (
             <>
               <SideSection title="Skills" fm={fm} />

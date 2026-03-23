@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useResumeState } from '../hooks/useResumeState';
 import type { TemplateId, ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
@@ -226,6 +227,8 @@ export default function Dashboard() {
   const [isRewritingSummary, setIsRewritingSummary] = useState(false);
   const [rewritingExperienceId, setRewritingExperienceId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewContentRef = useRef<HTMLDivElement>(null);
+  const [previewHeight, setPreviewHeight] = useState(RESUME_H);
 
   // AI Chat panel
   const [chatOpen, setChatOpen] = useState(false);
@@ -506,6 +509,19 @@ export default function Dashboard() {
     setAtsMissing(prev => prev.filter(k => k !== kw));
   };
 
+  // Track actual rendered height of resume preview for multi-page support
+  useEffect(() => {
+    const el = previewContentRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (previewContentRef.current) {
+        setPreviewHeight(previewContentRef.current.scrollHeight);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [resume, template, fontSize]);
+
   const isSubscriber = user?.subscription_status === 'ACTIVE';
   const freeLeft = user ? Math.max(0, 3 - (user.free_downloads_used ?? 0)) : null;
 
@@ -584,7 +600,13 @@ export default function Dashboard() {
   }[template];
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 font-sans">
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.4 }}
+      className="flex flex-col h-screen bg-slate-100 font-sans"
+    >
 
       {/* ─── Onboarding Wizard ────────────────────────────────────────────── */}
       {showOnboarding && (
@@ -1103,12 +1125,30 @@ export default function Dashboard() {
           <>
             {/* Resume preview */}
             <div style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
-              <div style={{ flexShrink: 0, width: RESUME_W * 0.82, height: RESUME_H * 0.82 }}>
-                <div style={{
+              {/* Outer placeholder — sized to scaled content height */}
+              <div style={{ flexShrink: 0, width: RESUME_W * 0.82, height: previewHeight * 0.82, position: 'relative' }}>
+                {/* Page break indicators */}
+                {Array.from({ length: Math.floor(previewHeight / RESUME_H) }).map((_, i) => (
+                  <div key={i} style={{
+                    position: 'absolute',
+                    top: (i + 1) * RESUME_H * 0.82,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    background: '#94a3b8',
+                    zIndex: 10,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <span style={{ background: '#94a3b8', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 3, fontWeight: 600, letterSpacing: '0.05em' }}>PAGE {i + 2}</span>
+                  </div>
+                ))}
+                {/* Inner — scaled resume, natural height */}
+                <div ref={previewContentRef} style={{
                   transform: 'scale(0.82)',
                   transformOrigin: 'top left',
                   width: RESUME_W,
-                  height: RESUME_H,
                   background: '#fff',
                   boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12), 0 30px 60px -15px rgba(0,0,0,0.06)',
                 }}>
@@ -1232,6 +1272,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

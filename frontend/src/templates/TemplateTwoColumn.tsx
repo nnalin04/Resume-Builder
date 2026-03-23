@@ -47,8 +47,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
       color: '#1a1a1a',
       background: '#fff',
       width: '794px',
-      height: '1123px',
-      overflow: 'hidden',
+      minHeight: '1123px',
       boxSizing: 'border-box' as const,
       WebkitPrintColorAdjust: 'exact' as const,
       printColorAdjust: 'exact' as const,
@@ -105,7 +104,6 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
 
         {/* Left column — Work Experience (~57%) */}
         <div style={{ width: '57%', padding: '14px 20px 18px 48px', borderRight: '1px solid #d0d0d0', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
-
           {experiences.length > 0 && (
             <>
               <ColHeader title="Work Experience" fm={fm} />
@@ -133,7 +131,6 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
 
         {/* Right column — Skills + Projects + Education (~43%) */}
         <div style={{ width: '43%', padding: '14px 30px 18px 20px', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
-
           {/* Skills */}
           {skills && (
             <div style={{ marginBottom: '14px' }}>
