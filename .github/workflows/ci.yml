@@ -29,7 +29,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt --timeout 300
           pip install pytest pytest-asyncio httpx
-          python -m spacy download en_core_web_sm
 
       - name: Run backend tests
         working-directory: backend
@@ -55,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: rm -f package-lock.json && npm install
 
       - name: Type check
         working-directory: frontend
