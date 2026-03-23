@@ -461,8 +461,81 @@ def _parse_certifications(lines: list[str]) -> list[dict]:
 async def parse_resume_with_ai(raw_text: str) -> dict:
     """
     Parse raw resume text into structured sections.
-    Fully local — no AI API required.
+    First tries Gemini 3.1 Flash-Lite, then falls back to local heuristics.
     """
+    try:
+        from gemini_service import parse_resume_structured
+        import logging
+        logger = logging.getLogger(__name__)
+
+        ai_result = await parse_resume_structured(raw_text)
+        if ai_result:
+            logger.info("parse_resume_with_ai: Successfully parsed using Gemini 3.1 Flash-Lite.")
+            
+            # Bucket the flat skills array
+            skills_list = ai_result.get("skills", [])
+            categorized_skills = {"languages": [], "frameworks": [], "tools": [], "databases": [], "other": []}
+            if isinstance(skills_list, list):
+                for skill in skills_list:
+                    cat = _classify_skill(skill)
+                    categorized_skills[cat].append(skill)
+            
+            return {
+                "contact": {
+                    "name": ai_result.get("personalInfo", {}).get("fullName", ""),
+                    "email": ai_result.get("personalInfo", {}).get("email", ""),
+                    "phone": ai_result.get("personalInfo", {}).get("phone", ""),
+                    "location": ai_result.get("personalInfo", {}).get("location", ""),
+                    "linkedin": ai_result.get("personalInfo", {}).get("linkedin", ""),
+                    "github": ai_result.get("personalInfo", {}).get("github", ""),
+                    "website": ai_result.get("personalInfo", {}).get("portfolio", "")
+                },
+                "summary": ai_result.get("summary", ""),
+                "experience": [
+                    {
+                        "company": exp.get("company", ""),
+                        "title": exp.get("jobTitle", ""),
+                        "location": exp.get("location", ""),
+                        "start_date": exp.get("startDate", ""),
+                        "end_date": exp.get("endDate", ""),
+                        "bullets": exp.get("bulletPoints", [])
+                    }
+                    for exp in ai_result.get("workExperience", [])
+                ],
+                "education": [
+                    {
+                        "institution": edu.get("institution", ""),
+                        "degree": edu.get("degree", ""),
+                        "field": "",
+                        "graduation_date": edu.get("endDate", edu.get("startDate", "")),
+                        "gpa": edu.get("gpa", "")
+                    }
+                    for edu in ai_result.get("education", [])
+                ],
+                "skills": categorized_skills,
+                "projects": [
+                    {
+                        "name": proj.get("name", ""),
+                        "description": proj.get("description", ""),
+                        "tech_stack": proj.get("technologies", []),
+                        "link": proj.get("link", "")
+                    }
+                    for proj in ai_result.get("projects", [])
+                ],
+                "certifications": [
+                    {
+                        "name": cert.get("name", ""),
+                        "issuer": cert.get("issuer", ""),
+                        "date": cert.get("date", "")
+                    }
+                    for cert in ai_result.get("certifications", [])
+                ]
+            }
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Fallback to local parser due to error: {e}")
+
+    # Fallback to local heuristic parsing
     lines = raw_text.splitlines()
     buckets = _split_sections(lines)
 

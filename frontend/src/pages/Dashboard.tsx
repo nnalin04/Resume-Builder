@@ -21,7 +21,8 @@ import TemplateTech from '../templates/TemplateTech';
 import TemplateFinance from '../templates/TemplateFinance';
 import TemplateCreative from '../templates/TemplateCreative';
 import OnboardingWizard from '../components/OnboardingWizard';
-import { exportToPDF, exportToDOCX } from '../utils/pdfExport';
+import PaginatedPreview, { PAGE_GAP } from '../components/PaginatedPreview';
+import { exportToDOCX } from '../utils/pdfExport';
 import { mapExperiences, mapEducation, mapProjects, mapCertifications, flattenSkills } from '../utils/sectionMappers';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
@@ -362,7 +363,7 @@ function SectionHeader({ title, open, onToggle }: { title: string; open: boolean
 
 export default function Dashboard() {
   const resume = useResumeState();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [template, setTemplate] = useState<TemplateId>('classic');
@@ -397,7 +398,7 @@ export default function Dashboard() {
   const [rewritingExperienceId, setRewritingExperienceId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewContentRef = useRef<HTMLDivElement>(null);
-  const [previewHeight, setPreviewHeight] = useState(RESUME_H);
+  const [previewPageCount, setPreviewPageCount] = useState(1);
 
   // AI Chat panel
   const [chatOpen, setChatOpen] = useState(false);
@@ -464,23 +465,11 @@ export default function Dashboard() {
 
   const handleExport = async () => {
     setExporting(true);
-    setExportError('');
     try {
-      if (user) {
-        await api.recordDownload();
-        await refreshUser();
-      }
-      const sections = resumeDataToSections(resume.resumeData);
-      const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
-      await exportToPDF(sections, template, name);
-      resume.clearDraft();
-    } catch (err: unknown) {
-      const e = err as { status?: number };
-      if (e?.status === 402) {
-        navigate('/pricing');
-      } else {
-        setExportError(err instanceof Error ? err.message : 'Export failed');
-      }
+      // Trigger native browser print which will be formatted by @media print
+      window.print();
+    } catch (err: any) {
+      alert(err.message || String(err));
     } finally {
       setExporting(false);
     }
@@ -520,14 +509,15 @@ export default function Dashboard() {
       const s = parseRes.sections;
       if (!s) return;
 
-      // Personal info
-      if (s.personal) {
-        resume.updatePersonalInfo('name', s.personal.name || '');
-        resume.updatePersonalInfo('email', s.personal.email || '');
-        resume.updatePersonalInfo('phone', s.personal.phone || '');
-        resume.updatePersonalInfo('location', s.personal.location || '');
-        resume.updatePersonalInfo('linkedin', s.personal.linkedin || '');
-        resume.updatePersonalInfo('github', s.personal.github || '');
+      // Personal info — backend returns sections.contact (not sections.personal)
+      const contact = s.contact ?? s.personal;
+      if (contact) {
+        resume.updatePersonalInfo('name', contact.name || '');
+        resume.updatePersonalInfo('email', contact.email || '');
+        resume.updatePersonalInfo('phone', contact.phone || '');
+        resume.updatePersonalInfo('location', contact.location || '');
+        resume.updatePersonalInfo('linkedin', contact.linkedin || '');
+        resume.updatePersonalInfo('github', contact.github || '');
       }
 
       // Summary
@@ -678,18 +668,6 @@ export default function Dashboard() {
     setAtsMissing(prev => prev.filter(k => k !== kw));
   };
 
-  // Track actual rendered height of resume preview for multi-page support
-  useEffect(() => {
-    const el = previewContentRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(() => {
-      if (previewContentRef.current) {
-        setPreviewHeight(previewContentRef.current.scrollHeight);
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [resume, template, fontSize]);
 
   const isSubscriber = user?.subscription_status === 'ACTIVE';
   const freeLeft = user ? Math.max(0, 3 - (user.free_downloads_used ?? 0)) : null;
@@ -822,7 +800,7 @@ export default function Dashboard() {
       )}
 
       {/* ─── Top Nav ──────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-4 py-3 flex items-center justify-between shrink-0 gap-3 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-4 py-3 flex items-center justify-between shrink-0 gap-3 shadow-sm hide-on-print">
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center shadow-soft">
             <span className="text-white text-sm font-outfit font-bold">R</span>
@@ -919,7 +897,7 @@ export default function Dashboard() {
       <div style={{ display: 'flex', flex: '1 1 0', overflow: 'hidden', flexDirection: 'row' }}>
 
         {/* ─── Editor Panel ─────────────────────────────────────────────── */}
-        <div style={{
+        <div className="hide-on-print" style={{
           flexShrink: 0,
           width: isMobile ? '100%' : editorWidth,
           background: '#fff',
@@ -1296,33 +1274,23 @@ export default function Dashboard() {
             {/* Resume preview */}
             <div style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
               {/* Outer placeholder — sized to scaled content height */}
-              <div style={{ flexShrink: 0, width: RESUME_W * 0.82, height: previewHeight * 0.82, position: 'relative' }}>
-                {/* Page break indicators */}
-                {Array.from({ length: Math.floor(previewHeight / RESUME_H) }).map((_, i) => (
-                  <div key={i} style={{
-                    position: 'absolute',
-                    top: (i + 1) * RESUME_H * 0.82,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: '#94a3b8',
-                    zIndex: 10,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <span style={{ background: '#94a3b8', color: '#fff', fontSize: 9, padding: '1px 6px', borderRadius: 3, fontWeight: 600, letterSpacing: '0.05em' }}>PAGE {i + 2}</span>
-                  </div>
-                ))}
-                {/* Inner — scaled resume, natural height */}
-                <div ref={previewContentRef} style={{
+              <div style={{
+                flexShrink: 0,
+                width: RESUME_W * 0.82,
+                height: (previewPageCount * RESUME_H + (previewPageCount - 1) * PAGE_GAP) * 0.82,
+              }}>
+                <div className="print-scale-inner" ref={previewContentRef} style={{
                   transform: 'scale(0.82)',
                   transformOrigin: 'top left',
                   width: RESUME_W,
-                  background: '#fff',
-                  boxShadow: '0 20px 40px -10px rgba(0,0,0,0.12), 0 30px 60px -15px rgba(0,0,0,0.06)',
                 }}>
-                  <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+                  <PaginatedPreview
+                    data={resume.resumeData}
+                    fontSize={fontSize}
+                    templateId={template}
+                    previewComponent={PreviewComponent}
+                    onPageCountChange={setPreviewPageCount}
+                  />
                 </div>
               </div>
             </div>

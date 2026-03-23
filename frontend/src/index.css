@@ -102,4 +102,36 @@
   * {
     @apply border-border;
   }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  
+  body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  html, body, #root, [style*="overflow: hidden"], [style*="overflow-y: auto"], [style*="overflowY: auto"] {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  
+  .hide-on-print {
+    display: none !important;
+  }
+  
+  .resume-page {
+    position: relative !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always;
+    break-after: page;
+  }
+}
 }

@@ -1,5 +1,5 @@
 """
-Resume generator with Gemini 2.5 Flash integration.
+Resume generator with Gemini 3.1 Flash-Lite integration.
 
 Capabilities:
 1. generate_clarifying_questions  — returns targeted questions based on resume gaps
@@ -161,7 +161,7 @@ async def generate_optimized_resume(
 ) -> dict:
     """
     Produce an ATS-optimized version of the resume.
-    Tries Gemini 2.5 Flash first; falls back to local rule engine on failure.
+    Tries Gemini 3.1 Flash-Lite first; falls back to local rule engine on failure.
     """
     import copy
 

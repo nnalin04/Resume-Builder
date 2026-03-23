@@ -9,8 +9,8 @@ Templates:
 Content flows naturally across pages — no artificial caps on bullets or sections.
 """
 import io
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import inch, mm
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
@@ -101,11 +101,11 @@ def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
-        pagesize=letter,
-        leftMargin=0.45 * inch,
-        rightMargin=0.45 * inch,
-        topMargin=0.45 * inch,
-        bottomMargin=0.4 * inch,
+        pagesize=A4,
+        leftMargin=15 * mm,
+        rightMargin=15 * mm,
+        topMargin=20 * mm,
+        bottomMargin=20 * mm,
     )
     styles = _build_styles(template)
     story = []

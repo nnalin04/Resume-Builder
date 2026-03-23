@@ -7,6 +7,7 @@ pydantic[email]
 pydantic-settings==2.13.1
 python-multipart==0.0.22
 pdfplumber==0.11.9
+PyMuPDF>=1.24.0
 SQLAlchemy==2.0.48
 duckduckgo-search==8.1.1
 python-dotenv==1.2.2

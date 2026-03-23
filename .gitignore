@@ -32,3 +32,18 @@ frontend/.vite/
 # Claude memory (local only)
 .claude/
 .vercel
+
+# Playwright MCP session
+.playwright-mcp/
+
+# Screenshots (debug artifacts)
+*.png
+*.jpg
+*.jpeg
+
+# Stitch design artifacts
+frontend/.stitch/
+
+# Markdown drafts / notes
+Comp_feature.md
+TODO.md

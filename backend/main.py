@@ -73,7 +73,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 # ─── Lifespan (startup tasks) ─────────────────────────────────────────────────
 
-_AVATARS_DIR = "/app/data/avatars"
+_AVATARS_DIR = os.getenv("AVATARS_DIR", "./data/avatars")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -917,7 +917,7 @@ async def ai_rewrite(
 ):
     """
     Stateless AI rewrite endpoint — no resume_id needed.
-    Calls Gemini 2.5 Flash; falls back to simple rule-based strengthening if unavailable.
+    Calls Gemini 3.1 Flash-Lite; falls back to simple rule-based strengthening if unavailable.
     """
     try:
         from gemini_service import rewrite_text
