@@ -33,6 +33,14 @@ export interface AuthUser {
   name: string;
   auth_provider: string;
   profile_photo_url: string | null;
+  phone: string | null;
+  location: string | null;
+  bio: string | null;
+  linkedin: string | null;
+  github: string | null;
+  website: string | null;
+  email_verified: boolean;
+  phone_verified: boolean;
   free_downloads_used: number;
   subscription_status: string;
   subscription_plan: string | null;
@@ -65,6 +73,34 @@ export const api = {
       }),
 
     me: () => request<AuthUser>('/api/auth/me'),
+
+    updateProfile: (data: {
+      name?: string; phone?: string; location?: string;
+      bio?: string; linkedin?: string; github?: string; website?: string;
+    }) => request<AuthUser>('/api/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
+
+    uploadAvatar: async (file: File): Promise<{ profile_photo_url: string }> => {
+      const token = getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${BASE}/api/auth/me/photo`, { method: 'POST', headers, body: formData });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail ?? 'Upload failed');
+      }
+      return res.json();
+    },
+
+    sendEmailVerification: () =>
+      request<{ detail: string; dev_otp?: string }>('/api/auth/send-verification', { method: 'POST' }),
+
+    verifyEmail: (otp: string) =>
+      request<{ detail: string; email_verified: boolean }>('/api/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ otp }),
+      }),
 
     forgotPassword: (email: string) =>
       request<{ detail: string; dev_reset_link?: string }>('/api/auth/forgot-password', {

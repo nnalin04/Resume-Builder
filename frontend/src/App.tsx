@@ -11,6 +11,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import CoverLetterPage from './pages/CoverLetterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ProfilePage from './pages/ProfilePage';
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ function AppRoutes() {
       <Route path="/cover-letter" element={<ProtectedRoute><CoverLetterPage /></ProtectedRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

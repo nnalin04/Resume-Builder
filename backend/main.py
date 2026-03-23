@@ -3,7 +3,9 @@ import json
 import logging
 import os
 import secrets
+import shutil
 import smtplib
+import uuid
 
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -16,7 +18,7 @@ from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Request, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, Response
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -71,9 +73,12 @@ limiter = Limiter(key_func=get_remote_address)
 
 # ─── Lifespan (startup tasks) ─────────────────────────────────────────────────
 
+_AVATARS_DIR = "/app/data/avatars"
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     models.Base.metadata.create_all(bind=engine)
+    os.makedirs(_AVATARS_DIR, exist_ok=True)
     _get_nlp()  # warm up spaCy model so first ATS request isn't slow
     logger.info("spaCy model loaded. API ready.")
     yield
@@ -98,16 +103,20 @@ app.add_middleware(
 # IP without the secret are rejected with 403.
 # If BACKEND_SECRET is not set (local dev), the check is skipped entirely.
 
-_BACKEND_SECRET = os.getenv("BACKEND_SECRET", "")
-_EXEMPT_PATHS   = {"/", "/health"}   # health probe doesn't go through Vercel
+_BACKEND_SECRET  = os.getenv("BACKEND_SECRET", "")
+_EXEMPT_PATHS    = {"/", "/health"}
+_EXEMPT_PREFIXES = ("/api/avatars/",)  # avatar images loaded by browser <img> tags
 
 @app.middleware("http")
 async def verify_backend_secret(request: Request, call_next):
-    if _BACKEND_SECRET and request.url.path not in _EXEMPT_PATHS:
-        incoming = request.headers.get("X-Backend-Secret", "")
-        if not hmac.compare_digest(incoming, _BACKEND_SECRET):
-            from fastapi.responses import JSONResponse
-            return JSONResponse({"detail": "Forbidden"}, status_code=403)
+    if _BACKEND_SECRET:
+        path = request.url.path
+        exempt = path in _EXEMPT_PATHS or any(path.startswith(p) for p in _EXEMPT_PREFIXES)
+        if not exempt:
+            incoming = request.headers.get("X-Backend-Secret", "")
+            if not hmac.compare_digest(incoming, _BACKEND_SECRET):
+                from fastapi.responses import JSONResponse
+                return JSONResponse({"detail": "Forbidden"}, status_code=403)
     return await call_next(request)
 
 
@@ -161,21 +170,29 @@ class LoginRequest(BaseModel):
 class GoogleCallbackRequest(BaseModel):
     code: str
 
-def _user_response(user: models.User, token: str) -> dict:
+def _user_dict(user: models.User) -> dict:
     return {
-        "token": token,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "auth_provider": user.auth_provider,
-            "profile_photo_url": user.profile_photo_url,
-            "free_downloads_used": user.free_downloads_used,
-            "subscription_status": user.subscription_status,
-            "subscription_plan": user.subscription_plan,
-            "subscription_expiry": user.subscription_expiry.isoformat() if user.subscription_expiry else None,
-        }
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "auth_provider": user.auth_provider,
+        "profile_photo_url": user.profile_photo_url,
+        "phone": user.phone,
+        "location": user.location,
+        "bio": user.bio,
+        "linkedin": user.linkedin,
+        "github": user.github,
+        "website": user.website,
+        "email_verified": bool(user.email_verified),
+        "phone_verified": bool(user.phone_verified),
+        "free_downloads_used": user.free_downloads_used,
+        "subscription_status": user.subscription_status,
+        "subscription_plan": user.subscription_plan,
+        "subscription_expiry": user.subscription_expiry.isoformat() if user.subscription_expiry else None,
     }
+
+def _user_response(user: models.User, token: str) -> dict:
+    return {"token": token, "user": _user_dict(user)}
 
 
 @app.post("/api/auth/register")
@@ -386,17 +403,192 @@ def reset_password(request: Request, body: ResetPasswordRequest, db: Session = D
 @app.get("/api/auth/me")
 def get_me(current_user: models.User = Depends(get_current_user)):
     """Return authenticated user profile."""
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "name": current_user.name,
-        "auth_provider": current_user.auth_provider,
-        "profile_photo_url": current_user.profile_photo_url,
-        "free_downloads_used": current_user.free_downloads_used,
-        "subscription_status": current_user.subscription_status,
-        "subscription_plan": current_user.subscription_plan,
-        "subscription_expiry": current_user.subscription_expiry.isoformat() if current_user.subscription_expiry else None,
+    return _user_dict(current_user)
+
+
+# ─── In-memory OTP store ──────────────────────────────────────────────────────
+# { user_id: { "otp": "123456", "expires_at": datetime } }
+_otp_store: dict[int, dict] = {}
+_OTP_TTL_MINUTES = 10
+
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
+    linkedin: Optional[str] = None
+    github: Optional[str] = None
+    website: Optional[str] = None
+
+class VerifyEmailRequest(BaseModel):
+    otp: str
+
+
+@app.put("/api/auth/me")
+@limiter.limit("20/minute")
+def update_profile(
+    request: Request,
+    body: UpdateProfileRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Update the authenticated user's profile fields."""
+    if body.name is not None:
+        current_user.name = body.name.strip() or current_user.name
+    if body.phone is not None:
+        current_user.phone = body.phone.strip() or None
+    if body.location is not None:
+        current_user.location = body.location.strip() or None
+    if body.bio is not None:
+        bio = body.bio.strip()
+        if len(bio) > 200:
+            raise HTTPException(status_code=422, detail="Bio must be 200 characters or fewer.")
+        current_user.bio = bio or None
+    if body.linkedin is not None:
+        current_user.linkedin = body.linkedin.strip() or None
+    if body.github is not None:
+        current_user.github = body.github.strip() or None
+    if body.website is not None:
+        current_user.website = body.website.strip() or None
+    db.commit()
+    db.refresh(current_user)
+    return _user_dict(current_user)
+
+
+@app.post("/api/auth/me/photo")
+@limiter.limit("5/minute")
+async def upload_avatar(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Upload a profile photo. Saves to /app/data/avatars/ and returns the URL."""
+    allowed = {"image/jpeg", "image/png", "image/webp"}
+    if file.content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Only JPG, PNG, or WebP images are supported.")
+    data = await file.read()
+    if len(data) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image too large. Maximum size is 2 MB.")
+    ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[file.content_type]
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    os.makedirs(_AVATARS_DIR, exist_ok=True)
+    dest = os.path.join(_AVATARS_DIR, filename)
+    # Remove old avatar file if it was one we stored
+    if current_user.profile_photo_url and "/api/avatars/" in current_user.profile_photo_url:
+        old_file = os.path.join(_AVATARS_DIR, current_user.profile_photo_url.split("/api/avatars/")[-1])
+        if os.path.exists(old_file):
+            os.remove(old_file)
+    with open(dest, "wb") as f:
+        f.write(data)
+    photo_url = f"/api/avatars/{filename}"
+    current_user.profile_photo_url = photo_url
+    db.commit()
+    return {"profile_photo_url": photo_url}
+
+
+@app.get("/api/avatars/{filename}")
+async def serve_avatar(filename: str):
+    """Serve a stored avatar image. Exempt from BACKEND_SECRET (browser <img> tag)."""
+    # Security: reject path traversal
+    if "/" in filename or "\\" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename.")
+    path = os.path.join(_AVATARS_DIR, filename)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Avatar not found.")
+    ext = filename.rsplit(".", 1)[-1].lower()
+    media = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}.get(ext, "application/octet-stream")
+    return FileResponse(path, media_type=media)
+
+
+def _send_otp_email(to_email: str, otp: str) -> None:
+    """Send email verification OTP via SMTP."""
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Your Resume Builder verification code"
+    msg["From"] = _SMTP_FROM
+    msg["To"] = to_email
+    text_body = f"Your Resume Builder verification code is: {otp}\n\nThis code expires in {_OTP_TTL_MINUTES} minutes."
+    html_body = f"""<!DOCTYPE html>
+<html>
+<body style="font-family:Inter,sans-serif;background:#f8fafc;padding:40px 0;margin:0">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:40px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6366f1,#818cf8);border-radius:10px;display:flex;align-items:center;justify-content:center">
+        <span style="color:#fff;font-weight:800;font-size:18px">R</span>
+      </div>
+      <span style="font-weight:700;font-size:18px;color:#0f172a">Resume Builder</span>
+    </div>
+    <h1 style="font-size:22px;font-weight:700;color:#0f172a;margin:0 0 8px">Verify your email</h1>
+    <p style="color:#64748b;font-size:15px;line-height:1.6;margin:0 0 24px">
+      Enter the code below in the app to verify your email address.
+      This code expires in <strong>{_OTP_TTL_MINUTES} minutes</strong>.
+    </p>
+    <div style="background:#f1f5f9;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">
+      <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#0f172a;font-family:monospace">{otp}</span>
+    </div>
+    <p style="color:#94a3b8;font-size:13px;margin:0">If you didn't request this, you can safely ignore this email.</p>
+  </div>
+</body>
+</html>"""
+    msg.attach(MIMEText(text_body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
+    with smtplib.SMTP(_SMTP_HOST, _SMTP_PORT) as server:
+        server.starttls()
+        server.login(_SMTP_USER, _SMTP_PASS)
+        server.sendmail(_SMTP_FROM, to_email, msg.as_string())
+
+
+@app.post("/api/auth/send-verification")
+@limiter.limit("3/minute")
+def send_verification(
+    request: Request,
+    current_user: models.User = Depends(get_current_user),
+):
+    """Send a 6-digit OTP to the user's email for verification."""
+    if current_user.email_verified:
+        raise HTTPException(status_code=400, detail="Email is already verified.")
+    otp = f"{secrets.randbelow(1000000):06d}"
+    _otp_store[current_user.id] = {
+        "otp": otp,
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=_OTP_TTL_MINUTES),
     }
+    if not _SMTP_HOST or not _SMTP_USER:
+        if os.getenv("ENV", "production") == "development":
+            logger.warning("SMTP not configured. OTP for %s: %s", current_user.email, otp)
+            return {"detail": "OTP sent (dev mode — check server logs).", "dev_otp": otp}
+        raise HTTPException(status_code=503, detail="Email service not configured. Contact support.")
+    try:
+        _send_otp_email(current_user.email, otp)
+    except Exception as exc:
+        logger.error("Failed to send OTP email: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to send email. Please try again later.")
+    return {"detail": "Verification code sent to your email."}
+
+
+@app.post("/api/auth/verify-email")
+@limiter.limit("10/minute")
+def verify_email(
+    request: Request,
+    body: VerifyEmailRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Verify email using the 6-digit OTP."""
+    if current_user.email_verified:
+        return {"detail": "Email already verified.", "email_verified": True}
+    entry = _otp_store.get(current_user.id)
+    if not entry:
+        raise HTTPException(status_code=400, detail="No verification code found. Please request a new one.")
+    if datetime.now(timezone.utc) > entry["expires_at"]:
+        _otp_store.pop(current_user.id, None)
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
+    if not hmac.compare_digest(body.otp.strip(), entry["otp"]):
+        raise HTTPException(status_code=400, detail="Incorrect verification code.")
+    _otp_store.pop(current_user.id, None)
+    current_user.email_verified = True
+    db.commit()
+    return {"detail": "Email verified successfully.", "email_verified": True}
 
 
 # ─── Resume CRUD ─────────────────────────────────────────────────────────────

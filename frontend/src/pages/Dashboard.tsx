@@ -362,7 +362,7 @@ function SectionHeader({ title, open, onToggle }: { title: string; open: boolean
 
 export default function Dashboard() {
   const resume = useResumeState();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [template, setTemplate] = useState<TemplateId>('classic');
@@ -892,11 +892,12 @@ export default function Dashboard() {
 
           {user ? (
             <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-              {user.profile_photo_url
-                ? <img src={user.profile_photo_url} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
-                : <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-sm font-bold text-slate-700 shadow-inner">{user.name.charAt(0).toUpperCase()}</div>
-              }
-              <button onClick={logout} className="hidden sm:block text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">Sign out</button>
+              <div onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
+                {user.profile_photo_url
+                  ? <img src={user.profile_photo_url} alt="" className="w-8 h-8 rounded-full border border-slate-200 object-cover" />
+                  : <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-sm font-bold text-slate-700 shadow-inner">{user.name.charAt(0).toUpperCase()}</div>
+                }
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-2 pl-3 border-l border-slate-200">

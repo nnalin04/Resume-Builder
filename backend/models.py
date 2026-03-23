@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, Float, ForeignKey
 from database import Base
 import datetime
 
@@ -16,6 +16,16 @@ class User(Base):
     name = Column(String, nullable=False, default="")
     auth_provider = Column(String, default="LOCAL")        # LOCAL | GOOGLE
     profile_photo_url = Column(String, nullable=True)
+
+    # Extended profile fields
+    phone = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+    bio = Column(String, nullable=True)
+    linkedin = Column(String, nullable=True)
+    github = Column(String, nullable=True)
+    website = Column(String, nullable=True)
+    email_verified = Column(Boolean, default=False)
+    phone_verified = Column(Boolean, default=False)
 
     free_downloads_used = Column(Integer, default=0)
     free_downloads_reset_date = Column(DateTime, nullable=True)
