@@ -107,7 +107,7 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Experience" fm={fm} />
           {experiences.map(exp => (
-            <div key={exp.id} style={{ marginBottom: '7px' }}>
+            <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: black, lineHeight: 1.3 }}>{exp.company}</span>
                 <span style={{ fontSize: f(10.3), color: muted, flexShrink: 0 }}>
@@ -131,8 +131,8 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Projects" fm={fm} />
           {projects.map(proj => (
-            <div key={proj.id} style={{ marginBottom: '6px' }}>
-              <div style={{ marginBottom: '2px' }}>
+            <div key={proj.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+              <div style={{ marginBottom: '2px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: black }}>
                   {proj.name}
                   {proj.link && <a href={proj.link} style={{ marginLeft: '6px', fontSize: f(10), color: accent, fontWeight: 400 }}>↗</a>}

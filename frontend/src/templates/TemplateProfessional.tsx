@@ -110,7 +110,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <SideSection title="Education" fm={fm} />
               {education.map(edu => (
-                <div key={edu.id} style={{ marginBottom: '8px' }}>
+                <div key={edu.id} style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{edu.institution}</div>
                   <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
                   <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{edu.year}</div>
@@ -123,7 +123,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <SideSection title="Certifications" fm={fm} />
               {certifications.map(cert => (
-                <div key={cert.id} style={{ marginBottom: '6px' }}>
+                <div key={cert.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{cert.name}</div>
                   {cert.issuer && <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{cert.issuer}</div>}
                   {cert.date && <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{cert.date}</div>}
@@ -139,7 +139,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <MainSection title="Experience" fm={fm} />
               {experiences.map(exp => (
-                <div key={exp.id} style={{ marginBottom: '7px' }}>
+                <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                     <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{exp.company}</span>
                     <span style={{ fontSize: f(10.3), color: '#64748b', lineHeight: 1.3, flexShrink: 0 }}>{exp.startDate}{exp.startDate && ' – '}{exp.currentlyWorking ? 'Present' : exp.endDate}</span>
@@ -157,7 +157,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <MainSection title="Projects" fm={fm} />
               {projects.map(proj => (
-                <div key={proj.id} style={{ marginBottom: '5px' }}>
+                <div key={proj.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', marginBottom: '2px', lineHeight: 1.3 }}>
                     {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', color: '#1e3a5f', fontSize: f(10) }}>↗</a>}
                   </div>

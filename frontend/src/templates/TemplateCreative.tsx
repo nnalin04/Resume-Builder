@@ -41,7 +41,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
         display: 'flex', flexDirection: 'column' as const, gap: 0,
       }}>
         {/* Name */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 20, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(18), fontWeight: 800, lineHeight: 1.2, color: '#fff', marginBottom: 4, letterSpacing: '-0.01em' }}>
             {p.name || 'Your Name'}
           </div>
@@ -56,7 +56,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
         </div>
 
         {allSkills.length > 0 && (
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Skills</div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
               {allSkills.map((s, i) => (
@@ -70,10 +70,10 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
         )}
 
         {education.length > 0 && (
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Education</div>
             {education.map((e, i) => (
-              <div key={i} style={{ marginBottom: 9 }}>
+              <div key={i} style={{ marginBottom: 9, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(10), fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
                 <div style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.8)' }}>{e.institution}</div>
                 <div style={{ fontSize: f(9), color: 'rgba(255,255,255,0.6)' }}>{e.year}</div>
@@ -98,17 +98,17 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
       <div style={{ flex: 1, padding: '36px 34px 24px 28px', overflowY: 'hidden' as const }}>
 
         {summary && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <SidebarSection title="About Me" f={f} />
             <div style={{ fontSize: f(10.7), color: '#334155', lineHeight: 1.55 }}>{summary}</div>
           </div>
         )}
 
         {experiences.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <SidebarSection title="Experience" f={f} />
             {experiences.map((e, i) => (
-              <div key={i} style={{ marginBottom: 11 }}>
+              <div key={i} style={{ marginBottom: 11, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                   <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
                   <span style={{ fontSize: f(9.5), color: '#94a3b8', flexShrink: 0 }}>{e.startDate} – {e.currentlyWorking ? 'Present' : e.endDate}</span>
@@ -129,7 +129,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           <div>
             <SidebarSection title="Projects" f={f} />
             {projects.map((proj, i) => (
-              <div key={i} style={{ marginBottom: 8 }}>
+              <div key={i} style={{ marginBottom: 8, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>{proj.name}</div>
                 {proj.description && <div style={{ fontSize: f(10.5), color: '#475569', lineHeight: 1.45 }}>{proj.description}</div>}
               </div>

@@ -54,7 +54,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
     }}>
 
       {/* Header */}
-      <div style={{ marginBottom: '8px' }}>
+      <div style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
         <div style={{ fontSize: f(26.7), fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', marginBottom: '3px', lineHeight: 1.2 }}>
           {p.name || 'Your Name'}
         </div>
@@ -101,7 +101,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Experience" fm={fm} />
           {experiences.map(exp => (
-            <div key={exp.id} style={{ marginBottom: '7px' }}>
+            <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{exp.company}</span>
                 <span style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>
@@ -122,7 +122,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Projects" fm={fm} />
           {projects.map(proj => (
-            <div key={proj.id} style={{ marginBottom: '5px' }}>
+            <div key={proj.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', marginBottom: '2px', lineHeight: 1.3 }}>
                 {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', fontSize: f(10), color: '#2563EB' }}>↗</a>}
               </div>

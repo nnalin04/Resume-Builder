@@ -31,7 +31,7 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
     }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 20, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
         <div style={{ fontSize: f(28), fontWeight: 700, letterSpacing: '0.02em', color: '#111', marginBottom: 6 }}>
           {p.name || 'Your Name'}
         </div>
@@ -45,17 +45,17 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
       </div>
 
       {summary && (
-        <div style={{ marginBottom: 18 }}>
+        <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 6 }}>Profile</div>
           <div style={{ fontSize: f(10.7), color: '#374151', lineHeight: 1.55 }}>{summary}</div>
         </div>
       )}
 
       {experiences.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Experience</div>
           {experiences.map((e, i) => (
-            <div key={i} style={{ marginBottom: 10 }}>
+            <div key={i} style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: '#111' }}>{e.position}</span>
                 <span style={{ fontSize: f(9.5), color: '#9ca3af', flexShrink: 0 }}>{e.startDate} – {e.currentlyWorking ? 'Present' : e.endDate}</span>
@@ -73,7 +73,7 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
       )}
 
       {education.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Education</div>
           {education.map((e, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 6 }}>
@@ -88,7 +88,7 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
       )}
 
       {allSkills.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Skills</div>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 6px' }}>
             {allSkills.map((s, i) => (
@@ -101,10 +101,10 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
       )}
 
       {projects.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Projects</div>
           {projects.map((proj, i) => (
-            <div key={i} style={{ marginBottom: 7 }}>
+            <div key={i} style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: '#111' }}>{proj.name}</div>
               {proj.description && <div style={{ fontSize: f(10.5), color: '#374151', lineHeight: 1.5 }}>{proj.description}</div>}
             </div>

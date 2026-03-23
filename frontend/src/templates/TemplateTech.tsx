@@ -61,7 +61,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
 
       {/* Skills tags — shown prominently near top */}
       {allSkills.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.2), fontWeight: 700, color: TEAL, textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 6, fontFamily: 'monospace' }}>// Tech Stack</div>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 5px' }}>
             {allSkills.map((s, i) => (
@@ -76,17 +76,17 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
       )}
 
       {summary && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="About" f={f} />
           <div style={{ fontSize: f(10.7), color: '#334155', lineHeight: 1.55 }}>{summary}</div>
         </div>
       )}
 
       {experiences.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Experience" f={f} />
           {experiences.map((e, i) => (
-            <div key={i} style={{ marginBottom: 10 }}>
+            <div key={i} style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                 <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
                 <span style={{ fontSize: f(9.5), color: '#94a3b8', flexShrink: 0, fontFamily: 'monospace' }}>{e.startDate} – {e.currentlyWorking ? 'now' : e.endDate}</span>
@@ -104,10 +104,10 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
       )}
 
       {projects.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Projects" f={f} />
           {projects.map((proj, i) => (
-            <div key={i} style={{ marginBottom: 7 }}>
+            <div key={i} style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>
                 {proj.name}
                 {proj.link && <a href={proj.link} style={{ marginLeft: 8, fontSize: f(9.5), color: TEAL, fontWeight: 400, textDecoration: 'none' }}>↗ link</a>}
@@ -119,7 +119,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
       )}
 
       {education.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Education" f={f} />
           {education.map((e, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 5 }}>

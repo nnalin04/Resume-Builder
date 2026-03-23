@@ -108,7 +108,7 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Experience" fm={fm} />
           {experiences.map((exp, idx) => (
-            <div key={exp.id} style={{ marginBottom: '6px', paddingTop: idx > 0 ? '5px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
+            <div key={exp.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const, paddingTop: idx > 0 ? '5px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f0f0f', lineHeight: 1.3 }}>{exp.company}</span>
                 <span style={{ fontSize: f(10.3), color: '#555', flexShrink: 0 }}>{exp.startDate}{exp.startDate && ' – '}{exp.currentlyWorking ? 'Present' : exp.endDate}</span>
@@ -128,7 +128,7 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Projects" fm={fm} />
           {projects.map((proj, idx) => (
-            <div key={proj.id} style={{ marginBottom: '5px', paddingTop: idx > 0 ? '4px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
+            <div key={proj.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const, paddingTop: idx > 0 ? '4px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
               <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f0f0f', marginBottom: '2px', lineHeight: 1.3 }}>
                 {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', fontSize: f(10), color: '#3A6FA8' }}>↗</a>}
               </div>
