@@ -30,7 +30,7 @@ import { api } from '../api/client';
 
 function resumeDataToSections(data: ResumeData): object {
   return {
-    personal: {
+    contact: {
       name: data.personalInfo.name,
       email: data.personalInfo.email,
       phone: data.personalInfo.phone,
