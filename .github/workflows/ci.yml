@@ -20,11 +20,14 @@ jobs:
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y libmupdf-dev
+
       - name: Install dependencies
         working-directory: backend
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt --timeout 300
           pip install pytest pytest-asyncio httpx
           python -m spacy download en_core_web_sm
 
@@ -52,7 +55,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm install
 
       - name: Type check
         working-directory: frontend
