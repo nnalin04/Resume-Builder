@@ -31,3 +31,4 @@ frontend/.vite/
 
 # Claude memory (local only)
 .claude/
+.vercel

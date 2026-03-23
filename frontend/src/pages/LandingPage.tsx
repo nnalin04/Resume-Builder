@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { buttonVariants } from '@/components/ui/button';
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -18,15 +19,15 @@ export default function LandingPage() {
         
         <div className="flex items-center gap-4">
           {user ? (
-            <Link to="/editor" className="px-5 py-2 text-sm font-semibold text-white bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-md hover:shadow-lg">
+            <Link to="/editor" className={buttonVariants({ variant: "default", className: "rounded-full bg-slate-900 hover:bg-slate-800 shadow-md hover:shadow-lg px-5" })}>
               Go to Editor
             </Link>
           ) : (
             <>
-              <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors hidden sm:block">
+              <Link to="/login" className={buttonVariants({ variant: "ghost", className: "hidden sm:inline-flex text-slate-600 hover:text-slate-900" })}>
                 Log in
               </Link>
-              <Link to="/editor" className="px-5 py-2.5 text-sm font-bold text-white bg-brand-600 rounded-full hover:bg-brand-700 transition-all shadow-soft hover:shadow-glow">
+              <Link to="/editor" className={buttonVariants({ variant: "default", className: "rounded-full bg-brand-600 hover:bg-brand-700 shadow-soft hover:shadow-glow px-5 font-bold" })}>
                 Build my resume
               </Link>
             </>
@@ -61,10 +62,10 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-              <Link to="/editor" className="w-full sm:w-auto px-8 py-4 text-lg font-bold text-white bg-brand-600 rounded-full hover:bg-brand-700 transition-all shadow-glow hover:shadow-lg hover:-translate-y-0.5">
+              <Link to="/editor" className={buttonVariants({ variant: "default", size: "lg", className: "w-full sm:w-auto rounded-full bg-brand-600 hover:bg-brand-700 shadow-glow hover:shadow-lg hover:-translate-y-0.5 transition-all text-lg px-8 py-6 font-bold" })}>
                 Create my resume
               </Link>
-              <Link to="/pricing" className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-slate-700 bg-white border border-slate-200 rounded-full hover:bg-slate-50 transition-all shadow-sm">
+              <Link to="/pricing" className={buttonVariants({ variant: "outline", size: "lg", className: "w-full sm:w-auto rounded-full shadow-sm text-lg px-8 py-6 font-semibold" })}>
                 View pricing
               </Link>
             </div>

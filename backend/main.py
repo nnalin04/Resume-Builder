@@ -4,6 +4,10 @@ import logging
 import os
 import secrets
 import smtplib
+
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
@@ -46,6 +50,20 @@ logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# ─── Sentry ───────────────────────────────────────────────────────────────────
+
+_SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if _SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+    )
+    logger.info("Sentry initialized.")
+else:
+    logger.warning("SENTRY_DSN not set — error monitoring disabled.")
 
 # ─── Rate Limiter ─────────────────────────────────────────────────────────────
 
@@ -192,7 +210,8 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/api/auth/google")
-async def google_callback(body: GoogleCallbackRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+async def google_callback(request: Request, body: GoogleCallbackRequest, db: Session = Depends(get_db)):
     """Exchange Google OAuth code for JWT. Creates user on first login."""
     google_user = await exchange_google_code(body.code)
     email = google_user.get("email")
@@ -313,9 +332,11 @@ def forgot_password(request: Request, body: ForgotPasswordRequest, db: Session =
     reset_link = f"{_FRONTEND_URL}/reset-password?token={token}"
 
     if not _SMTP_HOST or not _SMTP_USER:
-        # SMTP not configured — log the link for dev testing
-        logging.getLogger(__name__).warning("SMTP not configured. Reset link: %s", reset_link)
-        return {"detail": "If that email exists, a reset link has been sent.", "dev_reset_link": reset_link}
+        if os.getenv("ENV", "production") == "development":
+            # Dev only — log and return link so it can be tested without SMTP
+            logging.getLogger(__name__).warning("SMTP not configured. Reset link: %s", reset_link)
+            return {"detail": "If that email exists, a reset link has been sent.", "dev_reset_link": reset_link}
+        raise HTTPException(status_code=503, detail="Email service not configured. Contact support.")
 
     try:
         _send_reset_email(user.email, reset_link)
@@ -387,10 +408,14 @@ def list_resumes(
     current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    """List resumes with pagination. If authenticated, returns only the user's resumes."""
-    q = db.query(models.Resume).order_by(models.Resume.created_at.desc())
-    if current_user:
-        q = q.filter(models.Resume.user_id == current_user.id)
+    """List resumes for the authenticated user. Unauthenticated callers receive an empty list."""
+    if not current_user:
+        return {"items": [], "total": 0, "page": page, "page_size": page_size}
+    q = (
+        db.query(models.Resume)
+        .filter(models.Resume.user_id == current_user.id)
+        .order_by(models.Resume.created_at.desc())
+    )
     total = q.count()
     resumes = q.offset((page - 1) * page_size).limit(page_size).all()
     return {
@@ -492,7 +517,9 @@ def get_resume(
 
 
 @app.post("/api/parse-resume/{resume_id}")
+@limiter.limit("5/minute")
 async def parse_resume(
+    request: Request,
     resume_id: int,
     current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -537,7 +564,9 @@ class AtsRequest(BaseModel):
 
 
 @app.post("/api/ats-score")
+@limiter.limit("10/minute")
 async def get_ats_score(
+    request: Request,
     body: AtsRequest,
     current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -560,7 +589,9 @@ class GenerateRequest(BaseModel):
 
 
 @app.post("/api/clarify")
+@limiter.limit("10/minute")
 async def get_clarifying_questions(
+    request: Request,
     body: GenerateRequest,
     current_user: Optional[models.User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
@@ -781,7 +812,9 @@ class DirectExportRequest(BaseModel):
 
 
 @app.post("/api/export/generate")
+@limiter.limit("20/minute")
 async def generate_export_direct(
+    request: Request,
     body: DirectExportRequest,
     current_user: Optional[models.User] = Depends(get_current_user_optional),
 ):
@@ -803,7 +836,8 @@ async def generate_export_direct(
 # ─── Direct DOCX export (always free, no paywall) ────────────────────────────
 
 @app.post("/api/export/generate-docx")
-async def generate_export_docx(body: DirectExportRequest):
+@limiter.limit("20/minute")
+async def generate_export_docx(request: Request, body: DirectExportRequest):
     """Generate an ATS-safe DOCX from raw sections JSON.
 
     Always free — no download counter, no paywall. DOCX is the preferred
@@ -825,7 +859,9 @@ class CreateOrderRequest(BaseModel):
 
 
 @app.post("/api/payments/create-order")
+@limiter.limit("10/minute")
 async def create_order(
+    request: Request,
     body: CreateOrderRequest,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -14,24 +14,79 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
 
-interface EBState { hasError: boolean; message: string }
+interface EBState { hasError: boolean }
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, EBState> {
-  state: EBState = { hasError: false, message: '' };
-  static getDerivedStateFromError(err: Error): EBState {
-    return { hasError: true, message: err.message + '\n' + err.stack };
+  state: EBState = { hasError: false };
+  static getDerivedStateFromError(): EBState {
+    return { hasError: true };
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 24, fontFamily: 'monospace', color: '#c00' }}>
-          <b>App crash</b><br />
-          <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{this.state.message}</pre>
+        <div style={{
+          minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: '#f8fafc', padding: 24,
+        }}>
+          <div style={{
+            maxWidth: 480, width: '100%', background: '#fff', borderRadius: 16,
+            border: '1px solid #fee2e2', padding: '40px 36px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+              Something went wrong
+            </h2>
+            <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, marginBottom: 24 }}>
+              An unexpected error occurred. Please refresh the page and try again.
+              If the problem persists, contact support.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: '#6366f1', color: '#fff', border: 'none', borderRadius: 10,
+                padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              Refresh page
+            </button>
+          </div>
         </div>
       );
     }
     return this.props.children;
   }
+}
+
+// ─── 404 Page ─────────────────────────────────────────────────────────────────
+
+function NotFoundPage() {
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#f8fafc', padding: 24,
+    }}>
+      <div style={{ maxWidth: 420, width: '100%', textAlign: 'center' }}>
+        <div style={{ fontSize: 72, fontWeight: 800, color: '#e2e8f0', lineHeight: 1, marginBottom: 8 }}>
+          404
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>
+          Page not found
+        </h2>
+        <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, marginBottom: 28 }}>
+          The page you're looking for doesn't exist or has been moved.
+        </p>
+        <a
+          href="/"
+          style={{
+            display: 'inline-block', background: '#6366f1', color: '#fff', borderRadius: 10,
+            padding: '10px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none',
+          }}
+        >
+          Go home
+        </a>
+      </div>
+    </div>
+  );
 }
 
 // ─── Protected route — redirects to /login if not authenticated ───────────────
@@ -68,7 +123,7 @@ function AppRoutes() {
       <Route path="/cover-letter" element={<ProtectedRoute><CoverLetterPage /></ProtectedRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
