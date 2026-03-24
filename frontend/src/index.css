@@ -103,58 +103,40 @@
     @apply border-border;
   }
 
+/* Print area is hidden in the browser */
+#resume-print-area {
+  display: none;
+}
+
 @media print {
   @page {
     size: A4;
     margin: 0;
   }
 
-  /* Hide all UI chrome */
-  .hide-on-print {
-    display: none !important;
+  /* Hide everything on the page */
+  body * {
+    visibility: hidden !important;
   }
 
-  /* Reset body */
-  html, body, #root {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: white !important;
-    overflow: visible !important;
-    height: auto !important;
-    width: 100% !important;
-  }
-
-  /* Remove gray background and padding from preview panel */
-  .resume-preview-panel {
-    background: white !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    height: auto !important;
+  /* Show only the dedicated print area */
+  #resume-print-area {
     display: block !important;
-    flex: none !important;
-  }
-
-  /* Remove fixed size placeholder — let content flow naturally */
-  .resume-preview-placeholder {
-    width: auto !important;
-    height: auto !important;
-    flex-shrink: unset !important;
-  }
-
-  /* Reset the 0.82 scale — print at 100% */
-  .print-scale-inner {
-    transform: none !important;
+    visibility: visible !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 794px !important;
+    background: white !important;
   }
 
-  /* Each resume page prints as its own page */
-  .resume-page {
-    position: relative !important;
-    margin: 0 !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    page-break-after: always;
-    break-after: page;
+  #resume-print-area * {
+    visibility: visible !important;
+  }
+
+  /* Suppress Chrome adding full URLs after every link in print */
+  a[href]::after {
+    content: none !important;
   }
 }
 }

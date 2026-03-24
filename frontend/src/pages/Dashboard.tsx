@@ -22,7 +22,7 @@ import TemplateFinance from '../templates/TemplateFinance';
 import TemplateCreative from '../templates/TemplateCreative';
 import OnboardingWizard from '../components/OnboardingWizard';
 import PaginatedPreview, { PAGE_GAP } from '../components/PaginatedPreview';
-import { exportToPDF, exportToDOCX } from '../utils/pdfExport';
+import { exportToDOCX } from '../utils/pdfExport';
 import { mapExperiences, mapEducation, mapProjects, mapCertifications, flattenSkills } from '../utils/sectionMappers';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
@@ -1520,6 +1520,12 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      {/* ─── Print-only area ─────────────────────────────────────────────── */}
+      {/* Hidden in browser; shown via #resume-print-area @media print rules.   */}
+      {/* Renders the full template at 100% — browser paginates naturally.      */}
+      <div id="resume-print-area" style={{ display: 'none' }}>
+        <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+      </div>
     </motion.div>
   );
 }
