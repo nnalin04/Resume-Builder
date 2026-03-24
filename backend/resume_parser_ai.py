@@ -565,6 +565,20 @@ async def parse_resume_with_ai(raw_text: str) -> dict:
                         "date": cert.get("date", "")
                     }
                     for cert in ai_result.get("certifications", [])
+                ],
+                "customSections": [
+                    {
+                        "heading": cs.get("heading", "Other"),
+                        "items": [
+                            {
+                                "title": item.get("title", ""),
+                                "date": item.get("date", ""),
+                                "description": item.get("description", "")
+                            }
+                            for item in cs.get("items", [])
+                        ]
+                    }
+                    for cs in ai_result.get("customSections", [])
                 ]
             }
             result = restore_dates_from_text(result, raw_text)

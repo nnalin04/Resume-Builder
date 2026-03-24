@@ -120,8 +120,22 @@ The JSON schema MUST be EXACTLY:
        "issuer": "...",
        "date": "..."
     }}
+  ],
+  "customSections": [
+    {{
+      "heading": "Section Title",
+      "items": [
+        {{
+          "title": "item title",
+          "date": "optional date or empty string",
+          "description": "optional description or empty string"
+        }}
+      ]
+    }}
   ]
 }}
+
+5. If the resume contains non-standard sections (e.g. Publications, Awards, Volunteer Work, Languages, Conferences, Patents, Honors, or any other section not covered above), capture them in the "customSections" array using the schema above. Include only sections that are actually present in the resume. If there are no such sections, return "customSections": [].
 """
     result = await _generate(prompt)
     if result is None:

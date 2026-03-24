@@ -8,7 +8,7 @@ interface Props { data: ResumeData; fontSize?: FontSize; }
 const NAVY = '#1a2744';
 
 export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications } = data;
+  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
@@ -121,6 +121,22 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
           ))}
         </div>
       )}
+
+      {/* Custom Sections */}
+      {customSections && customSections.length > 0 && customSections.map(cs => (
+        <div key={cs.id} style={{ marginBottom: 14, marginTop: 8 }}>
+          <RuledSection title={cs.heading} f={f} />
+          {cs.items.map((item, i) => (
+            <div key={i} className="resume-item" style={{ marginBottom: 5 }}>
+              <div style={{ fontSize: f(10.7), fontWeight: 600, color: NAVY, lineHeight: 1.4 }}>
+                {item.title}{item.date && ` · ${item.date}`}
+              </div>
+              {item.subtitle && <div style={{ fontSize: f(10.3), color: '#555', fontStyle: 'italic', lineHeight: 1.4 }}>{item.subtitle}</div>}
+              {item.description && <div style={{ fontSize: f(10.3), color: '#333', lineHeight: 1.5 }}>{item.description}</div>}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }

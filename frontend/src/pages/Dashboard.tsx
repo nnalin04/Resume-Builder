@@ -543,6 +543,21 @@ export default function Dashboard() {
       if (Array.isArray(s.certifications) && s.certifications.length > 0)
         resume.replaceCertifications(mapCertifications(s.certifications));
 
+      // Custom sections (Publications, Awards, Volunteer, etc.)
+      if (Array.isArray(s.customSections) && s.customSections.length > 0) {
+        resume.replaceCustomSections(s.customSections.map((cs: any) => ({
+          id: crypto.randomUUID(),
+          heading: cs.heading || 'Other',
+          items: (cs.items || []).map((item: any) => ({
+            id: crypto.randomUUID(),
+            title: item.title || '',
+            subtitle: item.subtitle,
+            date: item.date,
+            description: item.description,
+          })),
+        })));
+      }
+
       addToast('Resume imported successfully!', 'success');
     } catch (err: unknown) {
       addToast(err instanceof Error ? err.message : 'Upload failed', 'error');

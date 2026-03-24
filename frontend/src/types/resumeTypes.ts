@@ -40,6 +40,20 @@ export interface Certification {
   date: string;
 }
 
+export interface CustomSectionItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  date?: string;
+  description?: string;
+}
+
+export interface CustomSection {
+  id: string;
+  heading: string;
+  items: CustomSectionItem[];
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -48,6 +62,7 @@ export interface ResumeData {
   education: Education[];
   skills: string;
   certifications: Certification[];
+  customSections?: CustomSection[];
 }
 
 export type TemplateId = 'classic' | 'modern' | 'professional' | 'twocolumn' | 'clean' | 'minimal' | 'executive' | 'tech' | 'finance' | 'creative';

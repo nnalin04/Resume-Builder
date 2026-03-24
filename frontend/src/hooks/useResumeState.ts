@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { ResumeData, Experience, Project, Education, Certification } from '../types/resumeTypes';
+import type { ResumeData, Experience, Project, Education, Certification, CustomSection } from '../types/resumeTypes';
 
 const STORAGE_KEY = 'resume_draft';
 
@@ -60,6 +60,7 @@ const defaultData: ResumeData = {
   skills:
     'JavaScript, TypeScript, React, Node.js, Python, Docker, Kubernetes, PostgreSQL, Redis, AWS, Git, CI/CD, REST APIs, System Design',
   certifications: [],
+  customSections: [],
 };
 
 function loadDraft(): ResumeData {
@@ -188,6 +189,9 @@ export function useResumeState() {
   const replaceCertifications = (certifications: Certification[]) =>
     set(prev => ({ ...prev, certifications }));
 
+  const replaceCustomSections = (sections: CustomSection[]) =>
+    set(prev => ({ ...prev, customSections: sections }));
+
   return {
     resumeData,
     isDirty,
@@ -199,5 +203,6 @@ export function useResumeState() {
     addProject, updateProject, removeProject, replaceProjects,
     addEducation, updateEducation, removeEducation, replaceEducation,
     addCertification, updateCertification, removeCertification, replaceCertifications,
+    replaceCustomSections,
   };
 }
