@@ -1447,14 +1447,19 @@ def _check_resume_ownership(resume: models.Resume, current_user: Optional[models
 
 def _is_free_tier(user: models.User) -> bool:
     if user.subscription_status == "ACTIVE":
-        if user.subscription_expiry and user.subscription_expiry > datetime.now(timezone.utc):
-            return False
+        if user.subscription_expiry:
+            # SQLite stores datetimes as naive; compare both as naive UTC
+            expiry = user.subscription_expiry
+            if expiry.tzinfo is not None:
+                expiry = expiry.replace(tzinfo=None)
+            if expiry > datetime.utcnow():
+                return False
     return True
 
 
 def _apply_monthly_reset(user: models.User, db: Session) -> None:
     """Reset free download counter if we're in a new calendar month."""
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     reset_date = user.free_downloads_reset_date
     if reset_date is None or (now.year, now.month) != (reset_date.year, reset_date.month):
         user.free_downloads_used = 0
