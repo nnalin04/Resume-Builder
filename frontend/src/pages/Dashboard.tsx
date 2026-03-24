@@ -399,6 +399,7 @@ export default function Dashboard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewContentRef = useRef<HTMLDivElement>(null);
   const [previewPageCount, setPreviewPageCount] = useState(1);
+  const [mobilePageCount, setMobilePageCount] = useState(1);
 
   // AI Chat panel
   const [chatOpen, setChatOpen] = useState(false);
@@ -1377,9 +1378,19 @@ export default function Dashboard() {
             ))}
           </div>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 16, WebkitOverflowScrolling: 'touch' as const }}>
-            <div style={{ flexShrink: 0, width: RESUME_W * 0.44, height: RESUME_H * 0.44 }}>
-              <div style={{ transform: 'scale(0.44)', transformOrigin: 'top left', width: RESUME_W, height: RESUME_H, background: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-                <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
+            <div style={{
+              flexShrink: 0,
+              width: RESUME_W * 0.44,
+              height: (mobilePageCount * RESUME_H + (mobilePageCount - 1) * PAGE_GAP) * 0.44,
+            }}>
+              <div style={{ transform: 'scale(0.44)', transformOrigin: 'top left', width: RESUME_W }}>
+                <PaginatedPreview
+                  data={resume.resumeData}
+                  fontSize={fontSize}
+                  templateId={template}
+                  previewComponent={PreviewComponent}
+                  onPageCountChange={setMobilePageCount}
+                />
               </div>
             </div>
           </div>
