@@ -6,6 +6,8 @@ to simple word tokenisation if the model is unavailable.
 import re
 from typing import Set, Dict, Any
 
+from gemini_service import sanitize_user_input
+
 # ── spaCy setup ───────────────────────────────────────────────────────────────
 
 _nlp = None
@@ -75,6 +77,8 @@ def calculate_ats_score(resume_text: str, job_description_text: str) -> Dict[str
     Calculate ATS compatibility score based on keyword overlap.
     Returns score (0-100), matched keywords, and missing keywords.
     """
+    resume_text = sanitize_user_input(resume_text)
+    job_description_text = sanitize_user_input(job_description_text)
     if not job_description_text.strip():
         return {"score": 0, "matched": [], "missing": [], "message": "No job description provided."}
 

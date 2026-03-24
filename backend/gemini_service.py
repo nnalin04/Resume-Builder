@@ -11,11 +11,32 @@ issues with newer Gemini model names.
 import json
 import logging
 import os
+import re as _gsre
 from typing import Optional
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+_INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?previous\s+instructions?",
+    r"disregard\s+(all\s+)?above",
+    r"forget\s+(all\s+)?previous",
+    r"system\s*:",
+    r"you\s+are\s+now\s+",
+    r"new\s+instructions?\s*:",
+    r"override\s+(previous\s+)?instructions?",
+    r"<\s*/?(?:system|instruction|prompt)\s*>",
+]
+
+def sanitize_user_input(text: str, max_len: int = 4000) -> str:
+    """Strip prompt injection patterns from user-submitted text before inserting into prompts."""
+    if not text:
+        return text
+    text = text[:max_len]
+    for pattern in _INJECTION_PATTERNS:
+        text = _gsre.sub(pattern, "[REMOVED]", text, flags=_gsre.IGNORECASE)
+    return text
 
 _GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -48,6 +69,8 @@ async def _generate(prompt: str) -> Optional[str]:
 
 async def rewrite_text(text: str, context: str = "") -> Optional[str]:
     """Strengthen a resume bullet point or summary using Gemini."""
+    text = sanitize_user_input(text)
+    context = sanitize_user_input(context)
     if not text.strip():
         return None
     prompt = f"Rewrite the following resume text to be more high-impact and ATS-friendly: {text}\nContext: {context}"
@@ -59,6 +82,7 @@ async def parse_resume_structured(raw_text: str) -> Optional[dict]:
     Parse raw extracted PDF text into a highly structured JSON format using Gemini.
     Follows strict JSON schema rules to ensure perfect data extraction.
     """
+    raw_text = sanitize_user_input(raw_text)
     if not raw_text.strip():
         return None
 
@@ -161,6 +185,7 @@ async def chat_response(
     user_msg: str
 ) -> Optional[str]:
     """AI resume coach chatbot logic."""
+    user_msg = sanitize_user_input(user_msg)
     sections_json = json.dumps(resume_sections, indent=2)
     prompt = f"You are an expert AI resume coach. Context:\n{sections_json}\nUser message: {user_msg}"
     return await _generate(prompt)
