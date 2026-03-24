@@ -22,7 +22,7 @@ import TemplateFinance from '../templates/TemplateFinance';
 import TemplateCreative from '../templates/TemplateCreative';
 import OnboardingWizard from '../components/OnboardingWizard';
 import PaginatedPreview, { PAGE_GAP } from '../components/PaginatedPreview';
-import { exportToDOCX } from '../utils/pdfExport';
+import { exportToPDF, exportToDOCX } from '../utils/pdfExport';
 import { mapExperiences, mapEducation, mapProjects, mapCertifications, flattenSkills } from '../utils/sectionMappers';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
@@ -437,6 +437,25 @@ export default function Dashboard() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [resume.isDirty]);
 
+  // Sync profile page updates → editor personal info.
+  // Uses a content hash so it fires on login AND after profile save + refreshUser.
+  const lastSyncedProfileRef = useRef<string>('');
+  useEffect(() => {
+    if (!user) return;
+    const profileKey = [user.id, user.name, user.phone, user.location, user.linkedin, user.github].join('|');
+    if (lastSyncedProfileRef.current === profileKey) return;
+    lastSyncedProfileRef.current = profileKey;
+    const p = resume.resumeData.personalInfo;
+    if (user.name)     resume.updatePersonalInfo('name',     user.name);
+    if (user.email && !p.email.includes('@example'))
+                       resume.updatePersonalInfo('email',    user.email);
+    if (user.phone)    resume.updatePersonalInfo('phone',    user.phone);
+    if (user.location) resume.updatePersonalInfo('location', user.location);
+    if (user.linkedin) resume.updatePersonalInfo('linkedin', user.linkedin);
+    if (user.github)   resume.updatePersonalInfo('github',   user.github);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const toggleSection = (s: Section) =>
     setOpenSections(prev => {
       const wasOpen = prev[s];
@@ -469,12 +488,16 @@ export default function Dashboard() {
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleExport = async () => {
+    if (!user) { navigate('/login'); return; }
     setExporting(true);
+    setExportError('');
     try {
-      // Trigger native browser print which will be formatted by @media print
-      window.print();
+      const sections = resumeDataToSections(resume.resumeData);
+      const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
+      await exportToPDF(sections, template, name);
     } catch (err: any) {
-      alert(err.message || String(err));
+      if (err.status === 402) navigate('/pricing');
+      else addToast(err.message || 'PDF export failed', 'error');
     } finally {
       setExporting(false);
     }
