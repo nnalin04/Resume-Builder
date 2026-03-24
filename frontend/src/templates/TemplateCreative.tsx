@@ -57,7 +57,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
 
         {allSkills.length > 0 && (
           <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
-            <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Skills</div>
+            <div className="resume-section-title" style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Skills</div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
               {allSkills.map((s, i) => (
                 <span key={i} style={{
@@ -71,7 +71,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
 
         {education.length > 0 && (
           <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
-            <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Education</div>
+            <div className="resume-section-title" style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Education</div>
             {education.map((e, i) => (
               <div key={i} className="resume-item" style={{ marginBottom: 9, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(10), fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
@@ -84,9 +84,9 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
 
         {certifications && certifications.length > 0 && (
           <div>
-            <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Certs</div>
+            <div className="resume-section-title" style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Certs</div>
             {certifications.map((c, i) => (
-              <div key={i} style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.85)', marginBottom: 4, lineHeight: 1.4 }}>
+              <div key={i} className="resume-item" style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.85)', marginBottom: 4, lineHeight: 1.4 }}>
                 {c.name}{c.date ? ` (${c.date})` : ''}
               </div>
             ))}

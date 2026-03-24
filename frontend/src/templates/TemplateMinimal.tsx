@@ -116,7 +116,7 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         <div>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Certifications</div>
           {certifications.map((c, i) => (
-            <div key={i} style={{ fontSize: f(10.5), color: '#374151', marginBottom: 3 }}>
+            <div key={i} className="resume-item" style={{ fontSize: f(10.5), color: '#374151', marginBottom: 3 }}>
               {c.name}{c.issuer ? ` — ${c.issuer}` : ''}{c.date ? ` (${c.date})` : ''}
             </div>
           ))}
