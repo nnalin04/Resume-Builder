@@ -495,10 +495,8 @@ export default function Dashboard() {
         await api.recordDownload();
         await refreshUser();
       }
-      const sections = resumeDataToSections(resume.resumeData);
-      const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
-      await exportToPDF(sections, template, name);
       resume.clearDraft();
+      window.print();
     } catch (err: unknown) {
       const e = err as { status?: number };
       if (e?.status === 402) {
@@ -1356,6 +1354,7 @@ export default function Dashboard() {
         {/* ─── Resizable divider ────────────────────────────────────────── */}
         {!isMobile && (
           <div
+            className="hide-on-print"
             onMouseDown={handleDividerMouseDown}
             style={{
               width: 5, flexShrink: 0, cursor: 'col-resize',
@@ -1373,9 +1372,9 @@ export default function Dashboard() {
         {!isMobile && (
           <>
             {/* Resume preview */}
-            <div style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
+            <div className="resume-preview-panel" style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
               {/* Outer placeholder — sized to scaled content height */}
-              <div style={{
+              <div className="resume-preview-placeholder" style={{
                 flexShrink: 0,
                 width: RESUME_W * 0.82,
                 height: (previewPageCount * RESUME_H + (previewPageCount - 1) * PAGE_GAP) * 0.82,
@@ -1397,7 +1396,7 @@ export default function Dashboard() {
             </div>
 
             {/* Template strip (right sidebar — font moved to header) */}
-            <div style={{
+            <div className="hide-on-print" style={{
               width: 100,
               background: '#fff',
               borderLeft: '1px solid #e2e8f0',
