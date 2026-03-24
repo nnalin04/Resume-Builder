@@ -456,6 +456,42 @@ def _parse_certifications(lines: list[str]) -> list[dict]:
     return certs
 
 
+# ─── Date restoration post-processing ────────────────────────────────────────
+
+_MONTH_DATE_RE = re.compile(
+    r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|'
+    r'Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)'
+    r'[\s\./\-]*(\d{4})\b',
+    re.IGNORECASE
+)
+
+def restore_dates_from_text(parsed: dict, raw_text: str) -> dict:
+    """
+    Patch year-only dates (e.g. "2020") in parsed JSON with month-inclusive
+    dates from raw text when the year matches.
+    Adopted from Resume-Matcher restore_dates_from_markdown().
+    """
+    full_dates: dict[str, list[str]] = {}
+    for match in _MONTH_DATE_RE.finditer(raw_text):
+        month, year = match.group(1), match.group(2)
+        full_dates.setdefault(year, []).append(f"{month[:3]} {year}")
+
+    year_only = re.compile(r'^\d{4}$')
+
+    def patch(obj):
+        if isinstance(obj, str) and year_only.match(obj.strip()):
+            year = obj.strip()
+            if year in full_dates:
+                return full_dates[year][0]
+        elif isinstance(obj, dict):
+            return {k: patch(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [patch(item) for item in obj]
+        return obj
+
+    return patch(parsed)
+
+
 # ─── Main public function ─────────────────────────────────────────────────────
 
 async def parse_resume_with_ai(raw_text: str) -> dict:
@@ -480,7 +516,7 @@ async def parse_resume_with_ai(raw_text: str) -> dict:
                     cat = _classify_skill(skill)
                     categorized_skills[cat].append(skill)
             
-            return {
+            result = {
                 "contact": {
                     "name": ai_result.get("personalInfo", {}).get("fullName", ""),
                     "email": ai_result.get("personalInfo", {}).get("email", ""),
@@ -531,6 +567,8 @@ async def parse_resume_with_ai(raw_text: str) -> dict:
                     for cert in ai_result.get("certifications", [])
                 ]
             }
+            result = restore_dates_from_text(result, raw_text)
+            return result
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(f"Fallback to local parser due to error: {e}")
@@ -548,7 +586,7 @@ async def parse_resume_with_ai(raw_text: str) -> dict:
     projects         = _parse_projects(buckets.get("projects", []))
     certifications   = _parse_certifications(buckets.get("certifications", []))
 
-    return {
+    result = {
         "contact":        contact,
         "summary":        summary,
         "experience":     experience,
@@ -557,3 +595,5 @@ async def parse_resume_with_ai(raw_text: str) -> dict:
         "projects":       projects,
         "certifications": certifications,
     }
+    result = restore_dates_from_text(result, raw_text)
+    return result
