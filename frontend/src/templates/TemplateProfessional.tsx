@@ -8,7 +8,7 @@ interface Props { data: ResumeData; fontSize?: FontSize; }
 function MainSection({ title, fm }: { title: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   return (
-    <div style={{ fontSize: f(12), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: '#1e3a5f', borderBottom: '2px solid #1e3a5f', paddingBottom: '2px', marginBottom: '5px', marginTop: '8px', lineHeight: 1.3 }}>
+    <div className="resume-section-title" style={{ fontSize: f(12), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: '#1e3a5f', borderBottom: '2px solid #1e3a5f', paddingBottom: '2px', marginBottom: '5px', marginTop: '8px', lineHeight: 1.3 }}>
       {title}
     </div>
   );
@@ -17,7 +17,7 @@ function MainSection({ title, fm }: { title: string; fm: number }) {
 function SideSection({ title, fm }: { title: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   return (
-    <div style={{ fontSize: f(11.3), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.3)', paddingBottom: '2px', marginBottom: '5px', marginTop: '10px', lineHeight: 1.3 }}>
+    <div className="resume-section-title" style={{ fontSize: f(11.3), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.3)', paddingBottom: '2px', marginBottom: '5px', marginTop: '10px', lineHeight: 1.3 }}>
       {title}
     </div>
   );
@@ -110,7 +110,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <SideSection title="Education" fm={fm} />
               {education.map(edu => (
-                <div key={edu.id} style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={edu.id} className="resume-item" style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{edu.institution}</div>
                   <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
                   <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{edu.year}</div>
@@ -123,7 +123,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <SideSection title="Certifications" fm={fm} />
               {certifications.map(cert => (
-                <div key={cert.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={cert.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{cert.name}</div>
                   {cert.issuer && <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{cert.issuer}</div>}
                   {cert.date && <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{cert.date}</div>}
@@ -139,7 +139,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <MainSection title="Experience" fm={fm} />
               {experiences.map(exp => (
-                <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={exp.id} className="resume-item" style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                     <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{exp.company}</span>
                     <span style={{ fontSize: f(10.3), color: '#64748b', lineHeight: 1.3, flexShrink: 0 }}>{exp.startDate}{exp.startDate && ' – '}{exp.currentlyWorking ? 'Present' : exp.endDate}</span>
@@ -157,7 +157,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             <>
               <MainSection title="Projects" fm={fm} />
               {projects.map(proj => (
-                <div key={proj.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={proj.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', marginBottom: '2px', lineHeight: 1.3 }}>
                     {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', color: '#1e3a5f', fontSize: f(10) }}>↗</a>}
                   </div>

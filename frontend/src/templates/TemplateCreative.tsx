@@ -73,7 +73,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <div style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Education</div>
             {education.map((e, i) => (
-              <div key={i} style={{ marginBottom: 9, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+              <div key={i} className="resume-item" style={{ marginBottom: 9, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(10), fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
                 <div style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.8)' }}>{e.institution}</div>
                 <div style={{ fontSize: f(9), color: 'rgba(255,255,255,0.6)' }}>{e.year}</div>
@@ -108,7 +108,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <SidebarSection title="Experience" f={f} />
             {experiences.map((e, i) => (
-              <div key={i} style={{ marginBottom: 11, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+              <div key={i} className="resume-item" style={{ marginBottom: 11, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                   <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
                   <span style={{ fontSize: f(9.5), color: '#94a3b8', flexShrink: 0 }}>{e.startDate} – {e.currentlyWorking ? 'Present' : e.endDate}</span>
@@ -129,7 +129,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           <div>
             <SidebarSection title="Projects" f={f} />
             {projects.map((proj, i) => (
-              <div key={i} style={{ marginBottom: 8, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+              <div key={i} className="resume-item" style={{ marginBottom: 8, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>{proj.name}</div>
                 {proj.description && <div style={{ fontSize: f(10.5), color: '#475569', lineHeight: 1.45 }}>{proj.description}</div>}
               </div>
@@ -143,7 +143,7 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
 
 function SidebarSection({ title, f }: { title: string; f: (n: number) => number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+    <div className="resume-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
       <div style={{ fontSize: f(10), fontWeight: 800, color: CORAL, textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>{title}</div>
       <div style={{ flex: 1, height: 1.5, background: CORAL, opacity: 0.3 }} />
     </div>

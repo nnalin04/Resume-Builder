@@ -59,14 +59,43 @@ export default function PaginatedPreview({
         return;
       }
 
-      // Measure all direct children relative to the template root
+      // Measure all direct children relative to the template root (fallback)
       const rootTop = root.getBoundingClientRect().top;
       const childRects = Array.from(root.children).map(c => {
         const r = (c as HTMLElement).getBoundingClientRect();
         return { top: r.top - rootTop, bottom: r.bottom - rootTop };
       });
 
-      // Determine cut points — prefer cutting between children, not mid-child
+      // 1. Get all fine-grained resume items
+      const itemEls = root.querySelectorAll<HTMLElement>('.resume-item');
+      const itemRects = Array.from(itemEls).map(c => {
+        const r = c.getBoundingClientRect();
+        return { top: r.top - rootTop, bottom: r.bottom - rootTop };
+      });
+
+      // 2. Orphan prevention: for each section title, find the next resume-item
+      // below it and push a combined rect covering title-top to first-item-bottom
+      const titleEls = root.querySelectorAll<HTMLElement>('.resume-section-title');
+      titleEls.forEach(title => {
+        const titleRect = title.getBoundingClientRect();
+        const titleTop = titleRect.top - rootTop;
+        const nextItem = Array.from(itemEls).find(el => {
+          const r = el.getBoundingClientRect();
+          return r.top - rootTop > titleTop;
+        });
+        if (nextItem) {
+          const nextBottom = nextItem.getBoundingClientRect().bottom - rootTop;
+          itemRects.push({ top: titleTop, bottom: nextBottom });
+        }
+      });
+
+      // Sort by top position
+      itemRects.sort((a, b) => a.top - b.top);
+
+      // Use class-based rects if available, otherwise fall back to direct children
+      const rectsToUse = itemRects.length > 0 ? itemRects : childRects;
+
+      // Determine cut points — prefer cutting between items, not mid-item
       const cuts: number[] = [0];
       let pageStart = 0;
 
@@ -74,8 +103,8 @@ export default function PaginatedPreview({
         const naturalEnd = pageStart + A4_H;
         let bestCut = naturalEnd;
 
-        // Find the first child that would be bisected at naturalEnd
-        for (const child of childRects) {
+        // Find the first item that would be bisected at naturalEnd
+        for (const child of rectsToUse) {
           if (
             child.top > pageStart &&
             child.top < naturalEnd &&

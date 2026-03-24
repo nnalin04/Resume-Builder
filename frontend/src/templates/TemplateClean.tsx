@@ -16,7 +16,7 @@ const tagBd   = '#b8cfe8';
 function SecHeader({ title, fm }: { title: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', marginTop: '7px' }}>
+    <div className="resume-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', marginTop: '7px' }}>
       <span style={{ fontSize: f(11.3), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: accent, whiteSpace: 'nowrap' as const }}>
         {title}
       </span>
@@ -107,7 +107,7 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Experience" fm={fm} />
           {experiences.map(exp => (
-            <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={exp.id} className="resume-item" style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: black, lineHeight: 1.3 }}>{exp.company}</span>
                 <span style={{ fontSize: f(10.3), color: muted, flexShrink: 0 }}>
@@ -131,7 +131,7 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Projects" fm={fm} />
           {projects.map(proj => (
-            <div key={proj.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={proj.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ marginBottom: '2px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: black }}>
                   {proj.name}
@@ -149,7 +149,7 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Education" fm={fm} />
           {education.map(edu => (
-            <div key={edu.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px', flexWrap: 'wrap', gap: '0 8px' }}>
+            <div key={edu.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <div style={{ fontSize: f(11), fontWeight: 600, color: black, lineHeight: 1.3 }}>{edu.institution}</div>
                 <div style={{ fontSize: f(10.4), color: muted, marginTop: '1px', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` — ${edu.field}`}</div>
@@ -165,7 +165,7 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Certifications" fm={fm} />
           {certifications.map(cert => (
-            <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3px', flexWrap: 'wrap', gap: '0 8px' }}>
+            <div key={cert.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3px', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <span style={{ fontSize: f(10.9), fontWeight: 600, color: black, lineHeight: 1.3 }}>{cert.name}</span>
                 {cert.issuer && <span style={{ fontSize: f(10.4), color: muted }}> — {cert.issuer}</span>}

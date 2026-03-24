@@ -8,7 +8,7 @@ interface Props { data: ResumeData; fontSize?: FontSize; }
 function ColHeader({ title, fm }: { title: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   return (
-    <div style={{
+    <div className="resume-section-title" style={{
       fontSize: f(11),
       fontWeight: 700,
       textTransform: 'uppercase' as const,
@@ -108,7 +108,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
             <>
               <ColHeader title="Work Experience" fm={fm} />
               {experiences.map((exp, idx) => (
-                <div key={exp.id} style={{ marginBottom: idx < experiences.length - 1 ? '12px' : '0' }}>
+                <div key={exp.id} className="resume-item" style={{ marginBottom: idx < experiences.length - 1 ? '12px' : '0' }}>
                   {/* Company + date row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1px', flexWrap: 'wrap', gap: '2px 8px' }}>
                     <span style={{ fontSize: f(11), fontWeight: 700, color: '#111', lineHeight: 1.3 }}>{exp.company}</span>
@@ -154,7 +154,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
             <div style={{ marginBottom: '14px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <ColHeader title="Personal Projects" fm={fm} />
               {projects.map(proj => (
-                <div key={proj.id} style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={proj.id} className="resume-item" style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 700, color: '#111', marginBottom: '3px', lineHeight: 1.3 }}>
                     {proj.name}
                     {proj.link && <a href={proj.link} style={{ marginLeft: '5px', fontSize: f(10), color: '#1565C0', fontWeight: 400 }}>↗</a>}
@@ -170,7 +170,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
             <div>
               <ColHeader title="Education" fm={fm} />
               {education.map(edu => (
-                <div key={edu.id} style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={edu.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), color: '#111', lineHeight: 1.4 }}>
                     {edu.institution}{edu.year && ` (${edu.year})`}
                   </div>
@@ -187,7 +187,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
             <div style={{ marginTop: '6px' }}>
               <ColHeader title="Certifications" fm={fm} />
               {certifications.map(cert => (
-                <div key={cert.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+                <div key={cert.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#111', lineHeight: 1.4 }}>{cert.name}</div>
                   {(cert.issuer || cert.date) && (
                     <div style={{ fontSize: f(10.3), color: '#444', lineHeight: 1.4 }}>

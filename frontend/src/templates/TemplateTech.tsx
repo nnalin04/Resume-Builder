@@ -86,7 +86,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Experience" f={f} />
           {experiences.map((e, i) => (
-            <div key={i} style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={i} className="resume-item" style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                 <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
                 <span style={{ fontSize: f(9.5), color: '#94a3b8', flexShrink: 0, fontFamily: 'monospace' }}>{e.startDate} – {e.currentlyWorking ? 'now' : e.endDate}</span>
@@ -107,7 +107,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Projects" f={f} />
           {projects.map((proj, i) => (
-            <div key={i} style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={i} className="resume-item" style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>
                 {proj.name}
                 {proj.link && <a href={proj.link} style={{ marginLeft: 8, fontSize: f(9.5), color: TEAL, fontWeight: 400, textDecoration: 'none' }}>↗ link</a>}
@@ -122,7 +122,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Education" f={f} />
           {education.map((e, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 5 }}>
+            <div key={i} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 5 }}>
               <div>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</span>
                 <span style={{ fontSize: f(10.2), color: '#64748b', marginLeft: 6 }}>{e.institution}</span>
@@ -149,7 +149,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
 
 function SectionLabel({ label, f }: { label: string; f: (n: number) => number }) {
   return (
-    <div style={{
+    <div className="resume-section-title" style={{
       fontSize: f(9.2), fontWeight: 700, color: TEAL,
       textTransform: 'uppercase' as const, letterSpacing: '0.08em',
       marginBottom: 7, marginTop: 2, fontFamily: 'monospace',

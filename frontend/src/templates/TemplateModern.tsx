@@ -8,7 +8,7 @@ interface Props { data: ResumeData; fontSize?: FontSize; }
 function SectionTitle({ title, fm }: { title: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 5px' }}>
+    <div className="resume-section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 5px' }}>
       <div style={{ width: '4px', height: '16px', background: '#2563EB', borderRadius: '2px', flexShrink: 0 }} />
       <span style={{ fontSize: f(12), fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#1e293b', lineHeight: 1.3 }}>{title}</span>
       <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
@@ -101,7 +101,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Experience" fm={fm} />
           {experiences.map(exp => (
-            <div key={exp.id} style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={exp.id} className="resume-item" style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{exp.company}</span>
                 <span style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>
@@ -122,7 +122,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Projects" fm={fm} />
           {projects.map(proj => (
-            <div key={proj.id} style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
+            <div key={proj.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', marginBottom: '2px', lineHeight: 1.3 }}>
                 {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', fontSize: f(10), color: '#2563EB' }}>↗</a>}
               </div>
@@ -137,7 +137,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Education" fm={fm} />
           {education.map(edu => (
-            <div key={edu.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
+            <div key={edu.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{edu.institution}</div>
                 <div style={{ fontSize: f(10.4), color: '#64748b', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
@@ -153,7 +153,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
         <>
           <SectionTitle title="Certifications" fm={fm} />
           {certifications.map(cert => (
-            <div key={cert.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
+            <div key={cert.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <span style={{ fontSize: f(10.9), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{cert.name}</span>
                 {cert.issuer && <span style={{ fontSize: f(10.4), color: '#64748b' }}> · {cert.issuer}</span>}
