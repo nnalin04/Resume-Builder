@@ -389,6 +389,10 @@ export default function Dashboard() {
   const [atsScore, setAtsScore] = useState<number | null>(null);
   const [atsMatched, setAtsMatched] = useState<string[]>([]);
   const [atsMissing, setAtsMissing] = useState<string[]>([]);
+  const [atsRequiredMissing, setAtsRequiredMissing] = useState<string[]>([]);
+  const [atsPreferredMissing, setAtsPreferredMissing] = useState<string[]>([]);
+  const [atsSeniority, setAtsSeniority] = useState<string>('');
+  const [atsExpYears, setAtsExpYears] = useState<number>(0);
   const [showMatchedKeywords, setShowMatchedKeywords] = useState(false);
   const [isScoring, setIsScoring] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -577,6 +581,10 @@ export default function Dashboard() {
       setAtsScore(res.score);
       setAtsMatched(res.matched ?? res.keywords_found ?? []);
       setAtsMissing(res.missing ?? res.keywords_missing ?? []);
+      setAtsRequiredMissing(res.required_missing ?? []);
+      setAtsPreferredMissing(res.preferred_missing ?? []);
+      setAtsSeniority(res.seniority ?? '');
+      setAtsExpYears(res.experience_years ?? 0);
     } catch {
       addToast('Failed to get ATS score. Try importing your PDF first.', 'error');
     } finally {
@@ -992,7 +1000,7 @@ export default function Dashboard() {
                     <span className={`text-sm font-bold px-2 py-0.5 rounded-md ${atsScore >= 80 ? 'bg-emerald-100 text-emerald-700' : atsScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {atsScore}%
                     </span>
-                    <button onClick={() => { setAtsScore(null); setAtsMatched([]); setAtsMissing([]); }} className="text-xs text-slate-400 hover:text-slate-600">↺ Reset</button>
+                    <button onClick={() => { setAtsScore(null); setAtsMatched([]); setAtsMissing([]); setAtsRequiredMissing([]); setAtsPreferredMissing([]); setAtsSeniority(''); setAtsExpYears(0); }} className="text-xs text-slate-400 hover:text-slate-600">↺ Reset</button>
                   </div>
                 ) : (
                   <button className="text-xs text-brand-600 font-semibold hover:underline disabled:opacity-50" onClick={handleScore} disabled={isScoring}>
@@ -1001,8 +1009,54 @@ export default function Dashboard() {
                 )}
               </div>
 
-              {/* ATS Keyword Breakdown (Section 3) */}
-              {atsMissing.length > 0 && (
+              {/* ATS Keyword Breakdown (Section 6: structured) */}
+
+              {/* Seniority line */}
+              {atsSeniority && (
+                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8, marginTop: 12 }}>
+                  {atsSeniority.charAt(0).toUpperCase() + atsSeniority.slice(1)} level
+                  {atsExpYears > 0 && ` · ${atsExpYears}+ years`}
+                </div>
+              )}
+
+              {/* Required Missing (red chips) */}
+              {atsRequiredMissing.length > 0 && (
+                <div style={{ marginBottom: 8, marginTop: 12 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#ef4444', marginBottom: 4 }}>🔴 Required Missing</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {atsRequiredMissing.map(kw => (
+                      <button
+                        key={kw}
+                        onClick={() => appendMissingKeyword(kw)}
+                        style={{ background: '#fee2e2', color: '#b91c1c', borderRadius: 4, padding: '2px 6px', fontSize: 11, border: '1px solid #fca5a5', cursor: 'pointer' }}
+                      >
+                        + {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preferred Missing (yellow chips) */}
+              {atsPreferredMissing.length > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#d97706', marginBottom: 4 }}>🟡 Preferred Missing</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {atsPreferredMissing.map(kw => (
+                      <button
+                        key={kw}
+                        onClick={() => appendMissingKeyword(kw)}
+                        style={{ background: '#fef3c7', color: '#92400e', borderRadius: 4, padding: '2px 6px', fontSize: 11, border: '1px solid #fcd34d', cursor: 'pointer' }}
+                      >
+                        + {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Fallback: generic missing keywords (only shown when structured data unavailable) */}
+              {atsRequiredMissing.length === 0 && atsMissing.length > 0 && (
                 <div className="mt-4">
                   <p className="text-xs font-semibold text-slate-500 mb-2">Missing keywords — click to add to skills:</p>
                   <div className="flex flex-wrap gap-1.5">

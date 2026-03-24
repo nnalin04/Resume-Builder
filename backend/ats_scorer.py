@@ -2,11 +2,16 @@
 ATS compatibility scorer.
 Uses spaCy for NLP-based keyword extraction with a robust fallback
 to simple word tokenisation if the model is unavailable.
+
+Section 6: Structured scoring — Gemini extracts required/preferred skills
+from the JD first; required skills carry 2x weight.  Falls back to the
+original spaCy approach when Gemini is unavailable or returns empty data.
 """
+import json
 import re
 from typing import Set, Dict, Any
 
-from gemini_service import sanitize_user_input
+from gemini_service import sanitize_user_input, _generate
 
 # ── spaCy setup ───────────────────────────────────────────────────────────────
 
@@ -70,23 +75,122 @@ def extract_keywords(text: str) -> Set[str]:
     return _extract_keywords_fallback(text)
 
 
+# ── Structured JD extraction (Section 6) ─────────────────────────────────────
+
+async def extract_jd_requirements(jd_text: str) -> dict:
+    """Use Gemini to extract structured job requirements from JD text."""
+    prompt = f"""Extract job requirements as JSON from this job description.
+Output ONLY valid JSON with no markdown, no explanation, no code fences.
+
+Schema:
+{{
+  "required_skills": ["list of explicitly required technical skills"],
+  "preferred_skills": ["list of preferred/nice-to-have skills"],
+  "experience_years": 0,
+  "seniority_level": "junior|mid|senior|staff|principal",
+  "keywords": ["other important keywords from the JD"]
+}}
+
+Job Description:
+{jd_text[:3000]}
+"""
+    try:
+        raw = await _generate(prompt)
+        if not raw:
+            return {}
+        text = raw.strip()
+        # Strip markdown code fences if model included them
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines)
+        result = json.loads(text)
+        return result if isinstance(result, dict) else {}
+    except Exception:
+        return {}
+
+
+# ── Structured scoring (Section 6) ───────────────────────────────────────────
+
+def score_against_requirements(resume_text: str, requirements: dict) -> dict:
+    """Score resume against structured JD requirements with 2x weight for required skills."""
+    resume_lower = resume_text.lower()
+
+    required_skills = requirements.get("required_skills", [])
+    preferred_skills = requirements.get("preferred_skills", [])
+
+    required_matched = [s for s in required_skills if s.lower() in resume_lower]
+    preferred_matched = [s for s in preferred_skills if s.lower() in resume_lower]
+    required_missing = [s for s in required_skills if s not in required_matched]
+    preferred_missing = [s for s in preferred_skills if s not in preferred_matched]
+
+    total_possible = (len(required_skills) * 2) + len(preferred_skills)
+    earned = (len(required_matched) * 2) + len(preferred_matched)
+    score = round((earned / total_possible) * 100) if total_possible > 0 else 0
+
+    return {
+        "score": score,
+        "required_matched": required_matched,
+        "required_missing": required_missing,
+        "preferred_matched": preferred_matched,
+        "preferred_missing": preferred_missing,
+        "matched": required_matched + preferred_matched,   # backward compat
+        "missing": required_missing + preferred_missing,   # backward compat
+        "seniority": requirements.get("seniority_level", ""),
+        "experience_years": requirements.get("experience_years", 0),
+    }
+
+
 # ── Scoring ───────────────────────────────────────────────────────────────────
 
-def calculate_ats_score(resume_text: str, job_description_text: str) -> Dict[str, Any]:
+async def calculate_ats_score(resume_text: str, job_description_text: str) -> Dict[str, Any]:
     """
     Calculate ATS compatibility score based on keyword overlap.
-    Returns score (0-100), matched keywords, and missing keywords.
+
+    Section 6: First attempts structured scoring via Gemini (required/preferred
+    skills with 2x weight for required).  Falls back to spaCy keyword overlap
+    when Gemini returns empty data or fails.
+
+    Returns score (0-100), matched keywords, missing keywords, plus the new
+    required_matched / required_missing / preferred_matched / preferred_missing
+    / seniority / experience_years fields (empty defaults in fallback path).
     """
     resume_text = sanitize_user_input(resume_text)
     job_description_text = sanitize_user_input(job_description_text)
     if not job_description_text.strip():
-        return {"score": 0, "matched": [], "missing": [], "message": "No job description provided."}
+        return {
+            "score": 0, "matched": [], "missing": [],
+            "required_matched": [], "required_missing": [],
+            "preferred_matched": [], "preferred_missing": [],
+            "seniority": "", "experience_years": 0,
+            "message": "No job description provided.",
+        }
 
+    # ── Section 6: try structured Gemini scoring first ────────────────────────
+    requirements = await extract_jd_requirements(job_description_text)
+    if requirements.get("required_skills") or requirements.get("preferred_skills"):
+        result = score_against_requirements(resume_text, requirements)
+        result["recommendations"] = []
+        result["keywords_found"] = result["matched"]
+        result["keywords_missing"] = result["missing"]
+        result["message"] = "Structured analysis complete."
+        return result
+
+    # ── Fallback: spaCy keyword overlap ──────────────────────────────────────
     resume_kw = extract_keywords(resume_text)
     jd_kw = extract_keywords(job_description_text)
 
     if not jd_kw:
-        return {"score": 0, "matched": [], "missing": [], "message": "No keywords found in job description."}
+        return {
+            "score": 0, "matched": [], "missing": [],
+            "required_matched": [], "required_missing": [],
+            "preferred_matched": [], "preferred_missing": [],
+            "seniority": "", "experience_years": 0,
+            "message": "No keywords found in job description.",
+        }
 
     matched = jd_kw & resume_kw
     missing = jd_kw - resume_kw
@@ -96,5 +200,14 @@ def calculate_ats_score(resume_text: str, job_description_text: str) -> Dict[str
         "score": score,
         "matched": sorted(matched),
         "missing": sorted(missing),
+        "keywords_found": sorted(matched),
+        "keywords_missing": sorted(missing),
+        "recommendations": [],
+        "required_matched": [],
+        "required_missing": [],
+        "preferred_matched": [],
+        "preferred_missing": [],
+        "seniority": "",
+        "experience_years": 0,
         "message": "Analysis complete.",
     }

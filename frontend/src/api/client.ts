@@ -160,7 +160,20 @@ export const api = {
     request<{ sections: any }>(`/api/parse-resume/${resumeId}`, { method: 'POST' }),
 
   getAtsScore: (resumeId: number, jobDescription: string) =>
-    request<{ score: number; recommendations: string[]; keywords_found: string[]; keywords_missing: string[]; matched: string[]; missing: string[] }>('/api/ats-score', {
+    request<{
+      score: number;
+      recommendations: string[];
+      keywords_found: string[];
+      keywords_missing: string[];
+      matched: string[];
+      missing: string[];
+      required_matched?: string[];
+      required_missing?: string[];
+      preferred_matched?: string[];
+      preferred_missing?: string[];
+      seniority?: string;
+      experience_years?: number;
+    }>('/api/ats-score', {
       method: 'POST',
       body: JSON.stringify({ resume_id: resumeId, job_description: jobDescription }),
     }),

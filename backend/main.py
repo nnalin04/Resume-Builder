@@ -768,7 +768,7 @@ async def get_ats_score(
     parsed = _safe_json(resume.parsed_sections)
 
     resume_text = _sections_to_text(parsed) if parsed else resume.original_text
-    return calculate_ats_score(resume_text, body.job_description)
+    return await calculate_ats_score(resume_text, body.job_description)
 
 
 # ─── AI Generation ───────────────────────────────────────────────────────────
@@ -822,7 +822,7 @@ async def generate_resume(
 
     ats_score = 0.0
     if body.job_description.strip():
-        score_result = calculate_ats_score(_sections_to_text(optimized), body.job_description)
+        score_result = await calculate_ats_score(_sections_to_text(optimized), body.job_description)
         ats_score = score_result.get("score", 0.0)
 
     gen = models.GeneratedResume(
