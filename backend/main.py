@@ -980,7 +980,7 @@ async def export_resume(
         )
 
     elif format == "pdf":
-        pdf_bytes = generate_resume_pdf(sections, template=template)
+        pdf_bytes, page_count = generate_resume_pdf(sections, template=template)
 
         # Increment free download counter after successful generation
         if current_user and _is_free_tier(current_user):
@@ -990,7 +990,11 @@ async def export_resume(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": 'attachment; filename="resume_optimized.pdf"'},
+            headers={
+                "Content-Disposition": 'attachment; filename="resume_optimized.pdf"',
+                "X-Resume-Pages": str(page_count),
+                "Access-Control-Expose-Headers": "X-Resume-Pages",
+            },
         )
 
     raise HTTPException(status_code=400, detail=f"Unsupported format: {format}")
@@ -1017,11 +1021,15 @@ async def generate_export_direct(
     """
     if current_user:
         _check_download_access(current_user)  # db not available here; monthly reset handled by record-download
-    pdf_bytes = generate_resume_pdf(body.sections, template=body.template)
+    pdf_bytes, page_count = generate_resume_pdf(body.sections, template=body.template)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
+        headers={
+            "Content-Disposition": 'attachment; filename="resume.pdf"',
+            "X-Resume-Pages": str(page_count),
+            "Access-Control-Expose-Headers": "X-Resume-Pages",
+        },
     )
 
 

@@ -96,8 +96,8 @@ def _first_sentence(text: str, max_chars: int = 110) -> str:
     return snippet[:max_chars] + ("…" if len(snippet) > max_chars else "")
 
 
-def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
-    """Build a one-page ATS-safe PDF. Returns raw bytes."""
+def generate_resume_pdf(sections: dict, template: str = "classic") -> tuple[bytes, int]:
+    """Build an ATS-safe multi-page PDF. Returns (raw_bytes, page_count)."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -203,7 +203,7 @@ def generate_resume_pdf(sections: dict, template: str = "classic") -> bytes:
             story.append(Paragraph(line, styles["body"]))
 
     doc.build(story)
-    return buffer.getvalue()
+    return buffer.getvalue(), doc.page
 
 
 def _render_skills(skills: dict, styles: dict) -> list:
