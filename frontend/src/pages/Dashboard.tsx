@@ -1521,8 +1521,11 @@ export default function Dashboard() {
         </div>
       )}
       {/* ─── Print-only area ─────────────────────────────────────────────── */}
-      {/* Hidden in browser; shown via #resume-print-area @media print rules.   */}
-      {/* Renders the full template at 100% — browser paginates naturally.      */}
+      {/* 🔒 LOCKED — commit a4ad0d2 — DO NOT MODIFY THIS BLOCK               */}
+      {/* Hidden in browser; @media print makes it the only visible element.   */}
+      {/* Renders full template at 100% scale — no overflow:hidden clipping,   */}
+      {/* no translateY, no transforms. Browser paginates naturally.           */}
+      {/* See CLAUDE.md "LOCKED FEATURES" for full explanation.               */}
       <div id="resume-print-area" style={{ display: 'none' }}>
         <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
       </div>

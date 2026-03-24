@@ -148,16 +148,66 @@ All 5 templates follow the same pattern:
 
 ---
 
+## 🔒 LOCKED FEATURES — DO NOT MODIFY
+
+These features are **confirmed working in production**. Do not touch the implementation
+files or flow listed here without explicit user instruction. If a future change accidentally
+breaks one of these, revert to the commit hash shown.
+
+### PDF Download (locked at commit `a4ad0d2`)
+**Status: WORKING** — all 10 templates, clickable LinkedIn/GitHub/email links, freemium gate.
+
+**How it works:**
+1. User clicks "Download PDF"
+2. `handleExport` in `Dashboard.tsx`:
+   - If logged in: calls `api.recordDownload()` (freemium gate — returns 402 if limit hit → navigate to `/pricing`)
+   - Calls `refreshUser()` to update download counter in UI
+   - Calls `resume.clearDraft()`
+   - Calls `window.print()`
+3. `@media print` CSS in `index.css` hides `body *` via `visibility: hidden`, then shows only `#resume-print-area`
+4. `#resume-print-area` div (at bottom of Dashboard JSX, normally `display: none`) renders `<PreviewComponent>` at 100% scale — no clipping, no transforms
+5. Browser print dialog opens — user clicks "Save as PDF"
+6. `a[href]::after { content: none }` prevents Chrome from appending raw URLs after links
+
+**Files involved — do not change the core flow:**
+- `frontend/src/pages/Dashboard.tsx` — `handleExport`, `#resume-print-area` div
+- `frontend/src/index.css` — `#resume-print-area` + `@media print` rules
+- `backend/main.py` — `/api/record-download` endpoint
+- `backend/main.py` — `_is_free_tier`, `_check_download_access` (compare naive UTC datetimes only)
+
+**Why `window.print()` and NOT backend PDF:**
+- Backend `pdf_generator.py` only supports 3 templates (classic/modern/technical); frontend has 10
+- Backend reportlab renders contact links as plain text; templates have `<a>` tags
+- `window.print()` prints the exact rendered React template — pixel-perfect, all templates, clickable links
+
+**Why `#resume-print-area` and NOT printing PaginatedPreview:**
+- PaginatedPreview clips each page via `overflow: hidden` + `translateY(-offset)` — incompatible with print
+- The dedicated `#resume-print-area` renders the full template without clipping; browser paginates naturally
+
+### PDF Upload (working, minor UI gaps acceptable)
+**Status: WORKING** — file accepted, text extracted, AI parses into structured data, all major sections mapped (experience, skills, education, projects, certifications, customSections).
+Minor gap: some view details in the parsed result display are missing — acceptable for now.
+
+---
+
 ## Lessons Learned — Roadblocks & Solutions
 
 ### 1. TypeScript `verbatimModuleSyntax: true`
 **Problem:** All type-only imports must use `import type`. Using `import { SomeType }` for interfaces/types causes esbuild errors.
 **Rule:** Always `import type { Foo }` for interfaces, types, and enums. Only use value imports for runtime values (functions, constants, classes).
 
-### 2. PDF Export — Never use html2canvas / html2pdf.js
+### 2. PDF Export — window.print() with dedicated #resume-print-area (WORKING — DO NOT CHANGE)
 **Problem (html2pdf.js):** Measures `scrollHeight` not CSS `height: 1123px` → always creates a second blank page.
 **Problem (html2canvas):** `windowWidth` option causes some child elements to collapse to 0px → `createPattern` error. Also misinterprets `pt` units at wrong DPI → text renders below background boxes. JPEG output desaturates blues.
-**Solution:** Use `window.print()` with a `@media print` stylesheet that isolates `#resume-preview` in a fixed-position wrapper. This uses the native browser renderer — perfect colors, working links, exact layout, single page.
+**Problem (backend reportlab):** Only knows 3 templates; renders contact links as plain text — NOT `<a>` tags.
+**Problem (printing PaginatedPreview directly):** PaginatedPreview clips each page via `overflow:hidden` + `translateY` — print removes clipping and the output is garbage.
+
+**Working solution (commit `a4ad0d2`):**
+- Add a `<div id="resume-print-area" style={{ display: 'none' }}>` at the bottom of Dashboard JSX
+- It renders `<PreviewComponent data={resume.resumeData} fontSize={fontSize} />` — the full template, no clipping
+- `@media print`: `body * { visibility: hidden }` then show only `#resume-print-area` at `position: fixed; top:0; left:0`
+- `a[href]::after { content: none !important }` stops Chrome adding raw URLs after links
+- Call `window.print()` from `handleExport` AFTER `api.recordDownload()` + `refreshUser()`
 
 ### 3. CSS Units — Never use `pt` in templates
 **Problem:** html2canvas misinterprets `pt` units (wrong DPI ratio), causing text to render below its background box. Even after switching to `window.print()`, `pt` units can cause misalignment.
