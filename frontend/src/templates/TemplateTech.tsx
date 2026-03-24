@@ -16,6 +16,11 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
 
   const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: '"Inter", "Helvetica Neue", Arial, sans-serif',
@@ -82,10 +87,10 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {experiences.length > 0 && (
+      {visibleExperiences.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Experience" f={f} />
-          {experiences.map((e, i) => (
+          {visibleExperiences.map((e, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                 <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
@@ -103,10 +108,10 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Projects" f={f} />
-          {projects.map((proj, i) => (
+          {visibleProjects.map((proj, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>
                 {proj.name}
@@ -118,10 +123,10 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {education.length > 0 && (
+      {visibleEducation.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <SectionLabel label="Education" f={f} />
-          {education.map((e, i) => (
+          {visibleEducation.map((e, i) => (
             <div key={i} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 5 }}>
               <div>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</span>
@@ -133,10 +138,10 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {certifications && certifications.length > 0 && (
+      {visibleCertifications.length > 0 && (
         <div>
           <SectionLabel label="Certifications" f={f} />
-          {certifications.map((c, i) => (
+          {visibleCertifications.map((c, i) => (
             <div key={i} style={{ fontSize: f(10.5), color: '#475569', marginBottom: 3 }}>
               {c.name}{c.issuer ? ` — ${c.issuer}` : ''}{c.date ? ` (${c.date})` : ''}
             </div>

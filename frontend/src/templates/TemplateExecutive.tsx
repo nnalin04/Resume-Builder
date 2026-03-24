@@ -13,6 +13,11 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
   const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
   const NAVY = '#1e2d4e';
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Georgia, "Times New Roman", serif',
@@ -53,10 +58,10 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
           </div>
         )}
 
-        {experiences.length > 0 && (
+        {visibleExperiences.length > 0 && (
           <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <SectionTitle title="Professional Experience" f={f} navy={NAVY} />
-            {experiences.map((e, i) => (
+            {visibleExperiences.map((e, i) => (
               <div key={i} className="resume-item" style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px' }}>
                   <span style={{ fontSize: f(11.5), fontWeight: 700, color: NAVY }}>{e.position}</span>
@@ -76,10 +81,10 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
 
         <div style={{ display: 'flex', gap: 20 }}>
           <div style={{ flex: 1 }}>
-            {education.length > 0 && (
+            {visibleEducation.length > 0 && (
               <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <SectionTitle title="Education" f={f} navy={NAVY} />
-                {education.map((e, i) => (
+                {visibleEducation.map((e, i) => (
                   <div key={i} className="resume-item" style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                     <div style={{ fontSize: f(11), fontWeight: 700, color: NAVY }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
                     <div style={{ fontSize: f(10.2), color: '#555' }}>{e.institution} · {e.year}</div>
@@ -87,10 +92,10 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
                 ))}
               </div>
             )}
-            {certifications && certifications.length > 0 && (
+            {visibleCertifications.length > 0 && (
               <div>
                 <SectionTitle title="Certifications" f={f} navy={NAVY} />
-                {certifications.map((c, i) => (
+                {visibleCertifications.map((c, i) => (
                   <div key={i} style={{ fontSize: f(10.5), color: '#444', marginBottom: 3 }}>
                     {c.name}{c.issuer ? ` — ${c.issuer}` : ''}{c.date ? ` (${c.date})` : ''}
                   </div>
@@ -128,10 +133,10 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
                 </div>
               </div>
             )}
-            {projects.length > 0 && (
+            {visibleProjects.length > 0 && (
               <div>
                 <SectionTitle title="Key Projects" f={f} navy={NAVY} />
-                {projects.map((proj, i) => (
+                {visibleProjects.map((proj, i) => (
                   <div key={i} className="resume-item" style={{ marginBottom: 6, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                     <div style={{ fontSize: f(10.7), fontWeight: 700, color: NAVY }}>{proj.name}</div>
                     {proj.description && <div style={{ fontSize: f(10.2), color: '#555', lineHeight: 1.45 }}>{proj.description}</div>}

@@ -28,10 +28,19 @@ export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove,
   return (
     <div>
       {experiences.map((exp, idx) => (
-        <div key={exp.id} style={s.card}>
+        <div key={exp.id} style={{ ...s.card, opacity: exp.hidden ? 0.45 : 1 }}>
           <div style={s.cardHeader}>
             <span style={s.badge}>Position {idx + 1}</span>
-            <button onClick={() => onRemove(exp.id)} style={s.removeBtn}>✕ Remove</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button
+                onClick={() => onUpdate(exp.id, 'hidden', !exp.hidden)}
+                title={exp.hidden ? 'Show in resume' : 'Hide from resume'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 4px', opacity: exp.hidden ? 0.5 : 1, lineHeight: 1 }}
+              >
+                {exp.hidden ? '🙈' : '👁️'}
+              </button>
+              <button onClick={() => onRemove(exp.id)} style={s.removeBtn}>✕ Remove</button>
+            </div>
           </div>
           <div style={s.grid2}>
             <div>

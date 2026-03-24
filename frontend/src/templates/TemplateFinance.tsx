@@ -14,6 +14,11 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
 
   const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: '"Times New Roman", Georgia, serif',
@@ -54,10 +59,10 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {experiences.length > 0 && (
+      {visibleExperiences.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <RuledSection title="Professional Experience" f={f} />
-          {experiences.map((e, i) => (
+          {visibleExperiences.map((e, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px' }}>
                 <span style={{ fontSize: f(11.2), fontWeight: 700, color: NAVY }}>{e.position}</span>
@@ -75,10 +80,10 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {education.length > 0 && (
+      {visibleEducation.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <RuledSection title="Education" f={f} />
-          {education.map((e, i) => (
+          {visibleEducation.map((e, i) => (
             <div key={i} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 6 }}>
               <div>
                 <div style={{ fontSize: f(11), fontWeight: 700, color: NAVY }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
@@ -99,10 +104,10 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <RuledSection title="Notable Projects" f={f} />
-          {projects.map((proj, i) => (
+          {visibleProjects.map((proj, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 6, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: NAVY }}>{proj.name}</div>
               {proj.description && <div style={{ fontSize: f(10.5), color: '#333', lineHeight: 1.45 }}>{proj.description}</div>}
@@ -111,10 +116,10 @@ export default function TemplateFinance({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {certifications && certifications.length > 0 && (
+      {visibleCertifications.length > 0 && (
         <div>
           <RuledSection title="Certifications & Licenses" f={f} />
-          {certifications.map((c, i) => (
+          {visibleCertifications.map((c, i) => (
             <div key={i} style={{ fontSize: f(10.5), color: '#333', marginBottom: 3 }}>
               {c.name}{c.issuer ? ` — ${c.issuer}` : ''}{c.date ? ` (${c.date})` : ''}
             </div>

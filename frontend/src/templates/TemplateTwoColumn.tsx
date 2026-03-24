@@ -40,6 +40,11 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Inter, Arial, sans-serif',
@@ -104,11 +109,11 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
 
         {/* Left column — Work Experience (~57%) */}
         <div style={{ width: '57%', padding: '14px 20px 18px 48px', borderRight: '1px solid #d0d0d0', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
-          {experiences.length > 0 && (
+          {visibleExperiences.length > 0 && (
             <>
               <ColHeader title="Work Experience" fm={fm} />
-              {experiences.map((exp, idx) => (
-                <div key={exp.id} className="resume-item" style={{ marginBottom: idx < experiences.length - 1 ? '12px' : '0' }}>
+              {visibleExperiences.map((exp, idx) => (
+                <div key={exp.id} className="resume-item" style={{ marginBottom: idx < visibleExperiences.length - 1 ? '12px' : '0' }}>
                   {/* Company + date row */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1px', flexWrap: 'wrap', gap: '2px 8px' }}>
                     <span style={{ fontSize: f(11), fontWeight: 700, color: '#111', lineHeight: 1.3 }}>{exp.company}</span>
@@ -166,10 +171,10 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
           )}
 
           {/* Personal Projects */}
-          {projects.length > 0 && (
+          {visibleProjects.length > 0 && (
             <div style={{ marginBottom: '14px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <ColHeader title="Personal Projects" fm={fm} />
-              {projects.map(proj => (
+              {visibleProjects.map(proj => (
                 <div key={proj.id} className="resume-item" style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 700, color: '#111', marginBottom: '3px', lineHeight: 1.3 }}>
                     {proj.name}
@@ -182,10 +187,10 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
           )}
 
           {/* Education */}
-          {education.length > 0 && (
+          {visibleEducation.length > 0 && (
             <div>
               <ColHeader title="Education" fm={fm} />
-              {education.map(edu => (
+              {visibleEducation.map(edu => (
                 <div key={edu.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), color: '#111', lineHeight: 1.4 }}>
                     {edu.institution}{edu.year && ` (${edu.year})`}
@@ -199,10 +204,10 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
           )}
 
           {/* Certifications */}
-          {certifications && certifications.length > 0 && (
+          {visibleCertifications.length > 0 && (
             <div style={{ marginTop: '6px' }}>
               <ColHeader title="Certifications" fm={fm} />
-              {certifications.map(cert => (
+              {visibleCertifications.map(cert => (
                 <div key={cert.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#111', lineHeight: 1.4 }}>{cert.name}</div>
                   {(cert.issuer || cert.date) && (

@@ -42,6 +42,11 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Inter, Arial, sans-serif',
@@ -104,10 +109,10 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Experience */}
-      {experiences.length > 0 && (
+      {visibleExperiences.length > 0 && (
         <>
           <SectionTitle title="Experience" fm={fm} />
-          {experiences.map((exp, idx) => (
+          {visibleExperiences.map((exp, idx) => (
             <div key={exp.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const, paddingTop: idx > 0 ? '5px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f0f0f', lineHeight: 1.3 }}>{exp.company}</span>
@@ -124,10 +129,10 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Projects */}
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <>
           <SectionTitle title="Projects" fm={fm} />
-          {projects.map((proj, idx) => (
+          {visibleProjects.map((proj, idx) => (
             <div key={proj.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const, paddingTop: idx > 0 ? '4px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none' }}>
               <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f0f0f', marginBottom: '2px', lineHeight: 1.3 }}>
                 {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', fontSize: f(10), color: '#3A6FA8' }}>↗</a>}
@@ -139,10 +144,10 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Education */}
-      {education.length > 0 && (
+      {visibleEducation.length > 0 && (
         <>
           <SectionTitle title="Education" fm={fm} />
-          {education.map((edu, idx) => (
+          {visibleEducation.map((edu, idx) => (
             <div key={edu.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', paddingTop: idx > 0 ? '4px' : 0, borderTop: idx > 0 ? '1px dashed #ccc' : 'none', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <div style={{ fontSize: f(11.1), fontWeight: 600, color: '#0f0f0f', lineHeight: 1.3 }}>{edu.institution}</div>
@@ -155,10 +160,10 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Certifications */}
-      {certifications && certifications.length > 0 && (
+      {visibleCertifications.length > 0 && (
         <>
           <SectionTitle title="Certifications" fm={fm} />
-          {certifications.map(cert => (
+          {visibleCertifications.map(cert => (
             <div key={cert.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <span style={{ fontSize: f(10.9), fontWeight: 600, color: '#0f0f0f', lineHeight: 1.3 }}>{cert.name}</span>

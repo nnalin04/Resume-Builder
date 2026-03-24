@@ -16,6 +16,7 @@ export interface Experience {
   endDate: string;
   currentlyWorking: boolean;
   description: string;
+  hidden?: boolean;
 }
 
 export interface Project {
@@ -23,6 +24,7 @@ export interface Project {
   name: string;
   description: string;
   link: string;
+  hidden?: boolean;
 }
 
 export interface Education {
@@ -31,6 +33,7 @@ export interface Education {
   degree: string;
   field: string;
   year: string;
+  hidden?: boolean;
 }
 
 export interface Certification {
@@ -38,6 +41,7 @@ export interface Certification {
   name: string;
   issuer: string;
   date: string;
+  hidden?: boolean;
 }
 
 export interface CustomSectionItem {

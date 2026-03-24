@@ -42,6 +42,11 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Inter, Arial, sans-serif',
@@ -106,10 +111,10 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             </>
           )}
 
-          {education.length > 0 && (
+          {visibleEducation.length > 0 && (
             <>
               <SideSection title="Education" fm={fm} />
-              {education.map(edu => (
+              {visibleEducation.map(edu => (
                 <div key={edu.id} className="resume-item" style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{edu.institution}</div>
                   <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
@@ -119,10 +124,10 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             </>
           )}
 
-          {certifications && certifications.length > 0 && (
+          {visibleCertifications.length > 0 && (
             <>
               <SideSection title="Certifications" fm={fm} />
-              {certifications.map(cert => (
+              {visibleCertifications.map(cert => (
                 <div key={cert.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{cert.name}</div>
                   {cert.issuer && <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{cert.issuer}</div>}
@@ -135,10 +140,10 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
 
         {/* Right main */}
         <div style={{ flex: 1, padding: '15px 30px 22px', overflow: 'hidden' }}>
-          {experiences.length > 0 && (
+          {visibleExperiences.length > 0 && (
             <>
               <MainSection title="Experience" fm={fm} />
-              {experiences.map(exp => (
+              {visibleExperiences.map(exp => (
                 <div key={exp.id} className="resume-item" style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                     <span style={{ fontSize: f(12), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{exp.company}</span>
@@ -153,10 +158,10 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
             </>
           )}
 
-          {projects.length > 0 && (
+          {visibleProjects.length > 0 && (
             <>
               <MainSection title="Projects" fm={fm} />
-              {projects.map(proj => (
+              {visibleProjects.map(proj => (
                 <div key={proj.id} className="resume-item" style={{ marginBottom: '5px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', marginBottom: '2px', lineHeight: 1.3 }}>
                     {proj.name}{proj.link && <a href={proj.link} style={{ marginLeft: '6px', color: '#1e3a5f', fontSize: f(10) }}>↗</a>}

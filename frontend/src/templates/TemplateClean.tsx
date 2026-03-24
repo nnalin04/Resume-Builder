@@ -45,6 +45,11 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
   const skillList = skills.split(',').map(s => s.trim()).filter(Boolean);
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Inter, Arial, sans-serif',
@@ -103,10 +108,10 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Experience */}
-      {experiences.length > 0 && (
+      {visibleExperiences.length > 0 && (
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Experience" fm={fm} />
-          {experiences.map(exp => (
+          {visibleExperiences.map(exp => (
             <div key={exp.id} className="resume-item" style={{ marginBottom: '7px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0 8px' }}>
                 <span style={{ fontSize: f(12), fontWeight: 700, color: black, lineHeight: 1.3 }}>{exp.company}</span>
@@ -127,10 +132,10 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Projects */}
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Projects" fm={fm} />
-          {projects.map(proj => (
+          {visibleProjects.map(proj => (
             <div key={proj.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ marginBottom: '2px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: black }}>
@@ -145,10 +150,10 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Education */}
-      {education.length > 0 && (
+      {visibleEducation.length > 0 && (
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Education" fm={fm} />
-          {education.map(edu => (
+          {visibleEducation.map(edu => (
             <div key={edu.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <div style={{ fontSize: f(11), fontWeight: 600, color: black, lineHeight: 1.3 }}>{edu.institution}</div>
@@ -161,10 +166,10 @@ export default function TemplateClean({ data, fontSize = 'small' }: Props) {
       )}
 
       {/* Certifications */}
-      {certifications && certifications.length > 0 && (
+      {visibleCertifications.length > 0 && (
         <div style={{ marginTop: '7px' }}>
           <SecHeader title="Certifications" fm={fm} />
-          {certifications.map(cert => (
+          {visibleCertifications.map(cert => (
             <div key={cert.id} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '3px', flexWrap: 'wrap', gap: '0 8px' }}>
               <div>
                 <span style={{ fontSize: f(10.9), fontWeight: 600, color: black, lineHeight: 1.3 }}>{cert.name}</span>

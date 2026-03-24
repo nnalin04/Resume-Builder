@@ -13,6 +13,11 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
   const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
   const ACCENT = '#6b7280';
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: 'Georgia, serif',
@@ -51,10 +56,10 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {experiences.length > 0 && (
+      {visibleExperiences.length > 0 && (
         <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Experience</div>
-          {experiences.map((e, i) => (
+          {visibleExperiences.map((e, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 10, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                 <span style={{ fontSize: f(11), fontWeight: 700, color: '#111' }}>{e.position}</span>
@@ -72,10 +77,10 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {education.length > 0 && (
+      {visibleEducation.length > 0 && (
         <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Education</div>
-          {education.map((e, i) => (
+          {visibleEducation.map((e, i) => (
             <div key={i} className="resume-item" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 6 }}>
               <div>
                 <div style={{ fontSize: f(11), fontWeight: 700, color: '#111' }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
@@ -100,10 +105,10 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {projects.length > 0 && (
+      {visibleProjects.length > 0 && (
         <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Projects</div>
-          {projects.map((proj, i) => (
+          {visibleProjects.map((proj, i) => (
             <div key={i} className="resume-item" style={{ marginBottom: 7, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <div style={{ fontSize: f(11), fontWeight: 700, color: '#111' }}>{proj.name}</div>
               {proj.description && <div style={{ fontSize: f(10.5), color: '#374151', lineHeight: 1.5 }}>{proj.description}</div>}
@@ -112,10 +117,10 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {certifications && certifications.length > 0 && (
+      {visibleCertifications.length > 0 && (
         <div>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Certifications</div>
-          {certifications.map((c, i) => (
+          {visibleCertifications.map((c, i) => (
             <div key={i} className="resume-item" style={{ fontSize: f(10.5), color: '#374151', marginBottom: 3 }}>
               {c.name}{c.issuer ? ` — ${c.issuer}` : ''}{c.date ? ` (${c.date})` : ''}
             </div>

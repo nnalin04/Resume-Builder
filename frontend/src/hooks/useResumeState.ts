@@ -134,7 +134,7 @@ export function useResumeState() {
     set(prev => ({ ...prev, projects: [...prev.projects, newProj] }));
   };
 
-  const updateProject = (id: string, field: keyof Project, value: string) => {
+  const updateProject = (id: string, field: keyof Project, value: string | boolean) => {
     set(prev => ({
       ...prev,
       projects: prev.projects.map(p => p.id === id ? { ...p, [field]: value } : p),
@@ -150,7 +150,7 @@ export function useResumeState() {
     set(prev => ({ ...prev, education: [...prev.education, newEdu] }));
   };
 
-  const updateEducation = (id: string, field: keyof Education, value: string) => {
+  const updateEducation = (id: string, field: keyof Education, value: string | boolean) => {
     set(prev => ({
       ...prev,
       education: prev.education.map(e => e.id === id ? { ...e, [field]: value } : e),
@@ -175,7 +175,7 @@ export function useResumeState() {
     set(prev => ({ ...prev, certifications: [...(prev.certifications ?? []), newCert] }));
   };
 
-  const updateCertification = (id: string, field: keyof Certification, value: string) => {
+  const updateCertification = (id: string, field: keyof Certification, value: string | boolean) => {
     set(prev => ({
       ...prev,
       certifications: (prev.certifications ?? []).map(c => c.id === id ? { ...c, [field]: value } : c),

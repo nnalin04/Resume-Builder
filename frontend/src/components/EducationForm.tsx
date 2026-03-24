@@ -3,7 +3,7 @@ import type { Education } from '../types/resumeTypes';
 interface Props {
   education: Education[];
   onAdd: () => void;
-  onUpdate: (id: string, field: keyof Education, value: string) => void;
+  onUpdate: (id: string, field: keyof Education, value: string | boolean) => void;
   onRemove: (id: string) => void;
 }
 
@@ -14,10 +14,19 @@ export default function EducationForm({ education, onAdd, onUpdate, onRemove }: 
   return (
     <div>
       {education.map((edu, idx) => (
-        <div key={edu.id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/70 mb-3">
+        <div key={edu.id} className="border border-slate-100 rounded-xl p-3 bg-slate-50/70 mb-3" style={{ opacity: edu.hidden ? 0.45 : 1 }}>
           <div className="flex justify-between items-center mb-2.5">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Education {idx + 1}</span>
-            <button onClick={() => onRemove(edu.id)} className="text-xs text-red-400 bg-transparent border-none cursor-pointer hover:text-red-500 transition-colors">✕ Remove</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button
+                onClick={() => onUpdate(edu.id, 'hidden', !edu.hidden)}
+                title={edu.hidden ? 'Show in resume' : 'Hide from resume'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 4px', opacity: edu.hidden ? 0.5 : 1, lineHeight: 1 }}
+              >
+                {edu.hidden ? '🙈' : '👁️'}
+              </button>
+              <button onClick={() => onRemove(edu.id)} className="text-xs text-red-400 bg-transparent border-none cursor-pointer hover:text-red-500 transition-colors">✕ Remove</button>
+            </div>
           </div>
           <div className="mb-2">
             <label className={labelCls}>Institution</label>

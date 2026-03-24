@@ -16,6 +16,11 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
 
   const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+  const visibleExperiences = experiences.filter(e => !e.hidden);
+  const visibleProjects = projects.filter(p => !p.hidden);
+  const visibleEducation = education.filter(e => !e.hidden);
+  const visibleCertifications = (certifications || []).filter(c => !c.hidden);
+
   return (
     <div id="resume-preview" style={{
       fontFamily: '"Inter", "Helvetica Neue", Arial, sans-serif',
@@ -69,10 +74,10 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           </div>
         )}
 
-        {education.length > 0 && (
+        {visibleEducation.length > 0 && (
           <div style={{ marginBottom: 18, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <div className="resume-section-title" style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Education</div>
-            {education.map((e, i) => (
+            {visibleEducation.map((e, i) => (
               <div key={i} className="resume-item" style={{ marginBottom: 9, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(10), fontWeight: 700, color: '#fff', lineHeight: 1.3 }}>{e.degree}{e.field ? ` in ${e.field}` : ''}</div>
                 <div style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.8)' }}>{e.institution}</div>
@@ -82,10 +87,10 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           </div>
         )}
 
-        {certifications && certifications.length > 0 && (
+        {visibleCertifications.length > 0 && (
           <div>
             <div className="resume-section-title" style={{ fontSize: f(9), fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 7 }}>Certs</div>
-            {certifications.map((c, i) => (
+            {visibleCertifications.map((c, i) => (
               <div key={i} className="resume-item" style={{ fontSize: f(9.2), color: 'rgba(255,255,255,0.85)', marginBottom: 4, lineHeight: 1.4 }}>
                 {c.name}{c.date ? ` (${c.date})` : ''}
               </div>
@@ -104,10 +109,10 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           </div>
         )}
 
-        {experiences.length > 0 && (
+        {visibleExperiences.length > 0 && (
           <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
             <SidebarSection title="Experience" f={f} />
-            {experiences.map((e, i) => (
+            {visibleExperiences.map((e, i) => (
               <div key={i} className="resume-item" style={{ marginBottom: 11, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: '0 8px', marginBottom: 1 }}>
                   <span style={{ fontSize: f(11.2), fontWeight: 700, color: '#0f172a' }}>{e.position}</span>
@@ -125,10 +130,10 @@ export default function TemplateCreative({ data, fontSize = 'small' }: Props) {
           </div>
         )}
 
-        {projects.length > 0 && (
+        {visibleProjects.length > 0 && (
           <div>
             <SidebarSection title="Projects" f={f} />
-            {projects.map((proj, i) => (
+            {visibleProjects.map((proj, i) => (
               <div key={i} className="resume-item" style={{ marginBottom: 8, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <div style={{ fontSize: f(11), fontWeight: 700, color: '#0f172a' }}>{proj.name}</div>
                 {proj.description && <div style={{ fontSize: f(10.5), color: '#475569', lineHeight: 1.45 }}>{proj.description}</div>}
