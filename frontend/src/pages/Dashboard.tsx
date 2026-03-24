@@ -363,7 +363,7 @@ function SectionHeader({ title, open, onToggle }: { title: string; open: boolean
 
 export default function Dashboard() {
   const resume = useResumeState();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   const [template, setTemplate] = useState<TemplateId>('classic');
@@ -488,16 +488,24 @@ export default function Dashboard() {
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleExport = async () => {
-    if (!user) { navigate('/login'); return; }
     setExporting(true);
     setExportError('');
     try {
+      if (user) {
+        await api.recordDownload();
+        await refreshUser();
+      }
       const sections = resumeDataToSections(resume.resumeData);
       const name = resume.resumeData.personalInfo.name?.replace(/\s+/g, '_') || 'resume';
       await exportToPDF(sections, template, name);
-    } catch (err: any) {
-      if (err.status === 402) navigate('/pricing');
-      else addToast(err.message || 'PDF export failed', 'error');
+      resume.clearDraft();
+    } catch (err: unknown) {
+      const e = err as { status?: number };
+      if (e?.status === 402) {
+        navigate('/pricing');
+      } else {
+        setExportError(err instanceof Error ? err.message : 'Export failed');
+      }
     } finally {
       setExporting(false);
     }
