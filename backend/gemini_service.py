@@ -77,13 +77,16 @@ async def _generate(prompt: str) -> Optional[str]:
         return None
 
 
-async def rewrite_text(text: str, context: str = "") -> Optional[str]:
+async def rewrite_text(text: str, instruction: str = "", context: str = "") -> Optional[str]:
     """Strengthen a resume bullet point or summary using Gemini."""
     text = sanitize_user_input(text)
+    instruction = sanitize_user_input(instruction)
     context = sanitize_user_input(context)
     if not text.strip():
         return None
-    prompt = f"Rewrite the following resume text to be more high-impact and ATS-friendly: {text}\nContext: {context}"
+    instruction_part = f"\nInstruction: {instruction}" if instruction.strip() else ""
+    context_part = f"\nContext: {context}" if context.strip() else ""
+    prompt = f"Rewrite the following resume text to be more high-impact and ATS-friendly: {text}{instruction_part}{context_part}"
     return await _generate(prompt)
 
 

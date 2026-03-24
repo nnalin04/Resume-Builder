@@ -932,7 +932,7 @@ async def chat_with_ai(
 
     reply = await build_chat_response(
         resume_sections=parsed,
-        chat_history=history,
+        _chat_history=history,
         user_message=body.message,
         job_description=body.job_description,
     )
