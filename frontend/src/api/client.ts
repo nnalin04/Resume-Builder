@@ -3,11 +3,19 @@
 // In local dev, set VITE_API_URL=http://localhost:8000 in .env.local
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
+import { createLogger } from '../utils/logger';
+const log = createLogger('api');
+
 function getToken(): string | null {
   return localStorage.getItem('auth_token');
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const method = (options.method ?? 'GET').toUpperCase();
+  const t0 = performance.now();
+
+  log.debug(`→ ${method} ${path}`, options.body ? (() => { try { return JSON.parse(options.body as string); } catch { return '[non-JSON body]'; } })() : undefined);
+
   const token = getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -16,12 +24,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
+  const ms = Math.round(performance.now() - t0);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
     const detail = typeof err.detail === 'object' ? err.detail.message : err.detail;
-    throw Object.assign(new Error(detail ?? 'Request failed'), { status: res.status, data: err.detail });
+    const errObj = Object.assign(new Error(detail ?? 'Request failed'), { status: res.status, data: err.detail });
+    const logFn = res.status >= 500 ? log.error : log.warn;
+    logFn(`← ${method} ${path} ${res.status} (${ms}ms)`, { detail, status: res.status });
+    throw errObj;
   }
+
+  log.info(`← ${method} ${path} ${res.status} (${ms}ms)`);
   return res.json() as Promise<T>;
 }
 

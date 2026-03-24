@@ -53,6 +53,11 @@ async def _generate(prompt: str) -> Optional[str]:
     if not api_key:
         logger.warning("GEMINI_API_KEY not set — skipping AI call.")
         return None
+    logger.debug(
+        "Gemini call: model=%s prompt_len=%d",
+        _GEMINI_MODEL, len(prompt),
+        extra={"event": "gemini_call_start", "model": _GEMINI_MODEL, "prompt_preview": prompt[:150]},
+    )
     url = f"{_GEMINI_BASE}/{_GEMINI_MODEL}:generateContent?key={api_key}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     try:
@@ -61,6 +66,11 @@ async def _generate(prompt: str) -> Optional[str]:
             resp.raise_for_status()
             data = resp.json()
             text = data["candidates"][0]["content"]["parts"][0]["text"]
+            logger.debug(
+                "Gemini response: len=%d preview=%s",
+                len(text), text[:100],
+                extra={"event": "gemini_call_success", "response_len": len(text)},
+            )
             return text.strip()
     except Exception as exc:
         logger.warning("Gemini REST API call failed: %s", exc)

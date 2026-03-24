@@ -47,11 +47,9 @@ from payment import (
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s %(message)s",
-)
-logger = logging.getLogger(__name__)
+from logger import setup_logging, get_logger
+setup_logging()
+logger = get_logger(__name__)
 
 # ─── Sentry ───────────────────────────────────────────────────────────────────
 
@@ -132,6 +130,55 @@ async def add_security_headers(request: Request, call_next):
     if request.url.scheme == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
+
+# ─── Request / Response Logging ───────────────────────────────────────────────
+
+import time as _time
+
+@app.middleware("http")
+async def _log_requests(request: Request, call_next):
+    """Log every HTTP request with method, path, status, and duration."""
+    t0 = _time.perf_counter()
+    path = request.url.path
+    method = request.method
+
+    logger.debug(
+        "→ %s %s",
+        method, path,
+        extra={
+            "event": "request_start",
+            "method": method,
+            "path": path,
+            "query": str(request.query_params) or None,
+            "content_type": request.headers.get("content-type"),
+            "user_agent": request.headers.get("user-agent", "")[:80],
+        },
+    )
+
+    response = await call_next(request)
+
+    duration_ms = round((_time.perf_counter() - t0) * 1000)
+    status = response.status_code
+
+    log_level = (
+        logging.ERROR if status >= 500
+        else logging.WARNING if status >= 400
+        else logging.INFO
+    )
+    logger.log(
+        log_level,
+        "← %s %s %d (%dms)",
+        method, path, status, duration_ms,
+        extra={
+            "event": "request_end",
+            "method": method,
+            "path": path,
+            "status": status,
+            "duration_ms": duration_ms,
+        },
+    )
+    return response
+
 
 # ─── Health ──────────────────────────────────────────────────────────────────
 
@@ -221,8 +268,18 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     """Login with email + password."""
     user = db.query(models.User).filter(models.User.email == body.email).first()
     if not user or not user.password_hash or not verify_password(body.password, user.password_hash):
+        logger.warning(
+            "Login failed: email=%s reason=bad_credentials",
+            body.email,
+            extra={"event": "login_failed", "email": body.email},
+        )
         raise HTTPException(status_code=401, detail="Invalid email or password.")
     token = create_access_token(user.id, user.email)
+    logger.info(
+        "User login: id=%d email=%s",
+        user.id, user.email,
+        extra={"event": "user_login", "user_id": user.id, "auth_provider": "email"},
+    )
     return _user_response(user, token)
 
 
@@ -1022,6 +1079,17 @@ async def generate_export_direct(
     if current_user:
         _check_download_access(current_user)  # db not available here; monthly reset handled by record-download
     pdf_bytes, page_count = generate_resume_pdf(body.sections, template=body.template)
+    logger.info(
+        "PDF generated: template=%s pages=%d user=%s",
+        body.template, page_count,
+        current_user.id if current_user else "anon",
+        extra={
+            "event": "pdf_generated",
+            "template": body.template,
+            "pages": page_count,
+            "user_id": current_user.id if current_user else None,
+        },
+    )
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -1195,6 +1263,11 @@ def record_download(
     On success, increments free_downloads_used and returns updated counts.
     """
     _apply_monthly_reset(current_user, db)
+    logger.debug(
+        "record_download: user=%d free_used=%d sub_status=%s",
+        current_user.id, current_user.free_downloads_used or 0, current_user.subscription_status,
+        extra={"event": "download_check", "user_id": current_user.id},
+    )
     _check_download_access(current_user, db)
 
     if _is_free_tier(current_user):
@@ -1202,6 +1275,11 @@ def record_download(
         db.commit()
         db.refresh(current_user)
 
+    logger.info(
+        "Download recorded: user=%d free_used=%d",
+        current_user.id, current_user.free_downloads_used,
+        extra={"event": "download_recorded", "user_id": current_user.id},
+    )
     return {
         "ok": True,
         "free_downloads_used": current_user.free_downloads_used,
@@ -1469,12 +1547,22 @@ def _apply_monthly_reset(user: models.User, db: Session) -> None:
 
 def _check_download_access(user: models.User, db: Session = None) -> None:
     """Raises 402 Payment Required if user has exhausted free downloads and has no active subscription."""
+    logger.debug(
+        "_check_download_access: user=%d free_used=%d sub=%s",
+        user.id, user.free_downloads_used or 0, user.subscription_status,
+        extra={"event": "download_access_check", "user_id": user.id},
+    )
     if not _is_free_tier(user):
         return  # subscriber — allow
     if db is not None:
         _apply_monthly_reset(user, db)
     if (user.free_downloads_used or 0) < FREE_DOWNLOAD_LIMIT:
         return  # still within free tier
+    logger.warning(
+        "Download blocked — limit reached: user=%d free_used=%d limit=%d",
+        user.id, user.free_downloads_used or 0, FREE_DOWNLOAD_LIMIT,
+        extra={"event": "download_blocked", "user_id": user.id, "reason": "limit_reached"},
+    )
     raise HTTPException(
         status_code=402,
         detail={
