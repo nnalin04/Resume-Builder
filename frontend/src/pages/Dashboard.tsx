@@ -373,6 +373,7 @@ export default function Dashboard() {
     experience: false, projects: false, education: false, certifications: false,
   });
   const [exporting, setExporting] = useState(false);
+  const exportingRef = useRef(false);
   const [exportingDocx, setExportingDocx] = useState(false);
   const [exportError, setExportError] = useState('');
   const [openJD, setOpenJD] = useState(false);
@@ -488,6 +489,8 @@ export default function Dashboard() {
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const handleExport = async () => {
+    if (exportingRef.current) return;  // synchronous guard — prevents double-tap on mobile
+    exportingRef.current = true;
     setExporting(true);
     setExportError('');
     try {
@@ -505,6 +508,7 @@ export default function Dashboard() {
         setExportError(err instanceof Error ? err.message : 'Export failed');
       }
     } finally {
+      exportingRef.current = false;
       setExporting(false);
     }
   };
