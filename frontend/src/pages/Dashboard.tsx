@@ -398,7 +398,16 @@ export default function Dashboard() {
   const [isScoring, setIsScoring] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [backendResumeId, setBackendResumeId] = useState<number | null>(null);
+  // Persist backendResumeId across page refreshes so Save Version stays enabled
+  const [backendResumeId, setBackendResumeIdState] = useState<number | null>(() => {
+    const v = localStorage.getItem('resume_backend_id');
+    return v ? parseInt(v, 10) : null;
+  });
+  const setBackendResumeId = (id: number | null) => {
+    setBackendResumeIdState(id);
+    if (id !== null) localStorage.setItem('resume_backend_id', String(id));
+    else localStorage.removeItem('resume_backend_id');
+  };
   const [isRewritingSummary, setIsRewritingSummary] = useState(false);
   const [rewritingExperienceId, setRewritingExperienceId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -499,6 +508,17 @@ export default function Dashboard() {
         await refreshUser();
       }
       resume.clearDraft();
+      // Set a unique document title so the saved PDF filename includes name + date
+      // (browser uses document.title as the default "Save as PDF" filename)
+      const candidateName = resume.resumeData.personalInfo.name?.trim().replace(/\s+/g, '_') || 'Resume';
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const prevTitle = document.title;
+      document.title = `${candidateName}_Resume_${dateStr}`;
+      const restoreTitle = () => {
+        document.title = prevTitle;
+        window.removeEventListener('afterprint', restoreTitle);
+      };
+      window.addEventListener('afterprint', restoreTitle);
       window.print();
     } catch (err: unknown) {
       const e = err as { status?: number };
