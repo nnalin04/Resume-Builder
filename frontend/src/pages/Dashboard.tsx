@@ -805,11 +805,21 @@ export default function Dashboard() {
       const res = await api.restoreVersion(backendResumeId, versionId);
       const s = res.sections;
       if (s) {
+        if (s.contact) {
+          const c = s.contact;
+          if (c.name)     resume.updatePersonalInfo('name',     c.name);
+          if (c.email)    resume.updatePersonalInfo('email',    c.email);
+          if (c.phone)    resume.updatePersonalInfo('phone',    c.phone);
+          if (c.location) resume.updatePersonalInfo('location', c.location);
+          if (c.linkedin) resume.updatePersonalInfo('linkedin', c.linkedin);
+          if (c.github)   resume.updatePersonalInfo('github',   c.github);
+        }
         if (s.summary) resume.updateSummary(s.summary);
         if (s.skills) resume.updateSkills(typeof s.skills === 'string' ? s.skills : Object.values(s.skills).flat().join(', '));
         if (Array.isArray(s.experience) && s.experience.length > 0) resume.replaceExperiences(mapExperiences(s.experience));
         if (Array.isArray(s.education) && s.education.length > 0) resume.replaceEducation(mapEducation(s.education));
         if (Array.isArray(s.projects) && s.projects.length > 0) resume.replaceProjects(mapProjects(s.projects));
+        if (Array.isArray(s.certifications) && s.certifications.length > 0) resume.replaceCertifications(mapCertifications(s.certifications));
       }
       addToast('Version restored!', 'success');
       setShowVersions(false);
