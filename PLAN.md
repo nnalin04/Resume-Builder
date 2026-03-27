@@ -35,30 +35,31 @@ Based on `GAP_ANALYSIS.md`. Each item has a checkbox — check it off when shipp
 ## Phase 2 — Frontend Features
 > New UI elements. Frontend only, no backend changes. Each is independent.
 
-- [ ] **2.1** Multi-column ATS warning banner — `frontend/src/pages/Dashboard.tsx`
+- [x] **2.1** Multi-column ATS warning banner — `frontend/src/pages/Dashboard.tsx`
   - Show amber warning when TwoColumn or Professional template is selected
   - Text: "This template may fail ATS parsing. Use single-column for job portal submissions."
 
-- [ ] **2.2** Resume page count indicator — `frontend/src/pages/Dashboard.tsx`
+- [x] **2.2** Resume page count indicator — `frontend/src/pages/Dashboard.tsx`
   - Surface the existing `previewPageCount` state as a badge in the preview header
   - Green ≤ 2 pages, amber = 3, red ≥ 4
 
-- [ ] **2.3** Biodata warning in PersonalInfo form — `frontend/src/components/PersonalInfoForm.tsx`
+- [x] **2.3** Biodata warning in PersonalInfo form — `frontend/src/components/PersonalInfoForm.tsx`
   - Add info note: "For GCCs/MNCs: city + state only. No DOB, father's name, marital status, or photo."
 
-- [ ] **2.4** Summary word count display — `frontend/src/components/SummaryForm.tsx`
+- [x] **2.4** Summary word count display — `frontend/src/components/SummaryForm.tsx`
   - Live word counter below textarea, turns amber above 80 words
 
-- [ ] **2.5** Bullet metric coverage badge per role — `frontend/src/components/ExperienceForm.tsx`
+- [x] **2.5** Bullet metric coverage badge per role — `frontend/src/components/ExperienceForm.tsx`
   - Per-role badge: "3/5 bullets have metrics" (regex: `\d+[%$kKmMx]`)
   - Green ≥ 50%, amber < 50%
 
-- [ ] **2.6** Custom section heading guidance — `frontend/src/pages/Dashboard.tsx`
-  - Tooltip/hint on custom section heading input: "Use standard labels ATS recognises: Volunteer Experience, Publications, Awards, Languages"
+- [x] **2.6** Custom section heading guidance — `frontend/src/pages/Dashboard.tsx`
+  - Added Custom Sections sidebar panel with ATS heading guidance note
+  - Shows sections imported from PDF; guidance on standard ATS labels
 
-- [ ] **2.7** ATS score visual breakdown — `frontend/src/pages/Dashboard.tsx`
+- [x] **2.7** ATS score visual breakdown — `frontend/src/pages/Dashboard.tsx`
   - Progress bar (green/amber/red) + separate rows for Required vs Preferred skills
-  - Data already returned by API (`required_matched`, `required_missing`, `preferred_matched`, `preferred_missing`)
+  - Added `atsRequiredMatched`/`atsPreferredMatched` state; data from API
 
 ---
 

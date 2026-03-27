@@ -106,7 +106,7 @@ const TEMPLATES: { id: TemplateId; label: string }[] = [
 const RESUME_W = 794;
 const RESUME_H = 1123;
 
-type Section = 'personal' | 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications';
+type Section = 'personal' | 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'customSections';
 
 // ─── Template thumbnail (micro-lookalike preview) ─────────────────────────────
 
@@ -375,6 +375,7 @@ export default function Dashboard() {
   const [openSections, setOpenSections] = useState<Record<Section, boolean>>({
     personal: false, summary: false, skills: false,
     experience: false, projects: false, education: false, certifications: false,
+    customSections: false,
   });
   const [exporting, setExporting] = useState(false);
   const exportingRef = useRef(false);
@@ -396,6 +397,8 @@ export default function Dashboard() {
   const [atsMissing, setAtsMissing] = useState<string[]>([]);
   const [atsRequiredMissing, setAtsRequiredMissing] = useState<string[]>([]);
   const [atsPreferredMissing, setAtsPreferredMissing] = useState<string[]>([]);
+  const [atsRequiredMatched, setAtsRequiredMatched] = useState<string[]>([]);
+  const [atsPreferredMatched, setAtsPreferredMatched] = useState<string[]>([]);
   const [atsSeniority, setAtsSeniority] = useState<string>('');
   const [atsExpYears, setAtsExpYears] = useState<number>(0);
   const [showMatchedKeywords, setShowMatchedKeywords] = useState(false);
@@ -640,6 +643,8 @@ export default function Dashboard() {
       setAtsMissing(res.missing ?? res.keywords_missing ?? []);
       setAtsRequiredMissing(res.required_missing ?? []);
       setAtsPreferredMissing(res.preferred_missing ?? []);
+      setAtsRequiredMatched(res.required_matched ?? []);
+      setAtsPreferredMatched(res.preferred_matched ?? []);
       setAtsSeniority(res.seniority ?? '');
       setAtsExpYears(res.experience_years ?? 0);
     } catch {
@@ -1071,7 +1076,7 @@ export default function Dashboard() {
                     <span className={`text-sm font-bold px-2 py-0.5 rounded-md ${atsScore >= 80 ? 'bg-emerald-100 text-emerald-700' : atsScore >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                       {atsScore}%
                     </span>
-                    <button onClick={() => { setAtsScore(null); setAtsMatched([]); setAtsMissing([]); setAtsRequiredMissing([]); setAtsPreferredMissing([]); setAtsSeniority(''); setAtsExpYears(0); }} className="text-xs text-slate-400 hover:text-slate-600">↺ Reset</button>
+                    <button onClick={() => { setAtsScore(null); setAtsMatched([]); setAtsMissing([]); setAtsRequiredMissing([]); setAtsPreferredMissing([]); setAtsRequiredMatched([]); setAtsPreferredMatched([]); setAtsSeniority(''); setAtsExpYears(0); }} className="text-xs text-slate-400 hover:text-slate-600">↺ Reset</button>
                   </div>
                 ) : (
                   <button className="text-xs text-brand-600 font-semibold hover:underline disabled:opacity-50" onClick={handleScore} disabled={isScoring}>
@@ -1081,6 +1086,40 @@ export default function Dashboard() {
               </div>
 
               {/* ATS Keyword Breakdown (Section 6: structured) */}
+
+              {/* 2.7 — Visual score bar + required/preferred rows */}
+              {atsScore !== null && (
+                <div style={{ marginTop: 12, marginBottom: 8 }}>
+                  {/* Score progress bar */}
+                  <div style={{ height: 8, borderRadius: 4, background: '#e2e8f0', overflow: 'hidden', marginBottom: 8 }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${atsScore}%`,
+                      borderRadius: 4,
+                      background: atsScore >= 80 ? '#16a34a' : atsScore >= 50 ? '#d97706' : '#dc2626',
+                      transition: 'width 0.4s ease',
+                    }} />
+                  </div>
+                  {/* Required skills row */}
+                  {(atsRequiredMatched.length + atsRequiredMissing.length) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                      <span style={{ color: '#374151', fontWeight: 600 }}>Required skills</span>
+                      <span style={{ color: atsRequiredMissing.length === 0 ? '#16a34a' : '#dc2626', fontWeight: 600 }}>
+                        {atsRequiredMatched.length}/{atsRequiredMatched.length + atsRequiredMissing.length} matched
+                      </span>
+                    </div>
+                  )}
+                  {/* Preferred skills row */}
+                  {(atsPreferredMatched.length + atsPreferredMissing.length) > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                      <span style={{ color: '#374151', fontWeight: 600 }}>Preferred skills</span>
+                      <span style={{ color: atsPreferredMissing.length === 0 ? '#16a34a' : '#d97706', fontWeight: 600 }}>
+                        {atsPreferredMatched.length}/{atsPreferredMatched.length + atsPreferredMissing.length} matched
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Seniority line */}
               {atsSeniority && (
@@ -1352,6 +1391,32 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Custom Sections (2.6 — heading guidance) */}
+            <SectionHeader title="Custom Sections" open={openSections.customSections} onToggle={() => toggleSection('customSections')} />
+            {openSections.customSections && (
+              <div className="p-5 bg-white border-b border-transparent">
+                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 11.5, color: '#166534', lineHeight: 1.5, marginBottom: 12 }}>
+                  <strong>ATS tip:</strong> Use standard headings ATS systems recognise: <em>Volunteer Experience, Publications, Awards, Open Source, Languages, Interests</em>. Avoid creative labels like "My Journey" — ATS may skip the section entirely.
+                </div>
+                {(resume.resumeData.customSections ?? []).length === 0 ? (
+                  <p style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '8px 0' }}>No custom sections yet. Import a PDF to populate them.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {(resume.resumeData.customSections ?? []).map(cs => (
+                      <div key={cs.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', background: '#f8fafc' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>{cs.heading}</div>
+                        {cs.items.map(item => (
+                          <div key={item.id} style={{ fontSize: 11.5, color: '#475569', paddingLeft: 8, borderLeft: '2px solid #e2e8f0', marginBottom: 2 }}>
+                            {item.title}{item.subtitle ? ` — ${item.subtitle}` : ''}{item.date ? ` (${item.date})` : ''}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ─── AI Coach Chat Panel ──────────────────────────────── */}
             <div style={{ borderTop: '1px solid #e2e8f0', background: '#f8fafc', position: 'sticky', bottom: 0 }}>
               <button
@@ -1479,7 +1544,30 @@ export default function Dashboard() {
         {!isMobile && (
           <>
             {/* Resume preview */}
-            <div className="resume-preview-panel" style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', background: '#f1f5f9', padding: 32 }}>
+            <div className="resume-preview-panel" style={{ flex: '1 1 0', overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#f1f5f9', padding: 32, paddingTop: 16, position: 'relative' }}>
+
+              {/* 2.1 — Multi-column ATS warning */}
+              {(template === 'twocolumn' || template === 'professional') && (
+                <div style={{ width: '100%', maxWidth: RESUME_W * 0.82, marginBottom: 12, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, padding: '8px 12px', fontSize: 11.5, color: '#92400e', lineHeight: 1.5 }}>
+                  ⚠ This template uses a multi-column layout. Many ATS systems may misread or skip your content. Use a single-column template when applying via an online portal.
+                </div>
+              )}
+
+              {/* 2.2 — Page count badge */}
+              {previewPageCount > 0 && (
+                <div style={{ width: '100%', maxWidth: RESUME_W * 0.82, display: 'flex', justifyContent: 'flex-end', marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                    background: previewPageCount <= 2 ? '#dcfce7' : previewPageCount === 3 ? '#fef3c7' : '#fee2e2',
+                    color: previewPageCount <= 2 ? '#15803d' : previewPageCount === 3 ? '#92400e' : '#b91c1c',
+                    border: `1px solid ${previewPageCount <= 2 ? '#bbf7d0' : previewPageCount === 3 ? '#fcd34d' : '#fca5a5'}`,
+                  }}>
+                    {previewPageCount} {previewPageCount === 1 ? 'page' : 'pages'}
+                    {previewPageCount >= 3 ? ' — consider trimming' : ''}
+                  </span>
+                </div>
+              )}
+
               {/* Outer placeholder — sized to scaled content height */}
               <div className="resume-preview-placeholder" style={{
                 flexShrink: 0,

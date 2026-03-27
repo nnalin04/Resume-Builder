@@ -39,6 +39,9 @@ export default function PersonalInfoForm({ data, onChange }: Props) {
         <label className={labelCls}>GitHub URL</label>
         <input className={inputCls} value={data.github} onChange={e => onChange('github', e.target.value)} placeholder="https://github.com/..." />
       </div>
+      <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, padding: '8px 12px', fontSize: 11.5, color: '#1e40af', lineHeight: 1.5 }}>
+        <strong>For product companies &amp; GCCs:</strong> Include city/state only. Do not add date of birth, father's name, marital status, or photo — these are not expected and can introduce unconscious bias.
+      </div>
     </div>
   );
 }

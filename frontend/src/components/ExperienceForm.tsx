@@ -90,6 +90,18 @@ export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove,
               onChange={e => onUpdate(exp.id, 'description', e.target.value)}
               placeholder={"Bullet point 1\nBullet point 2\nBullet point 3"}
             />
+            {(() => {
+              const bullets = exp.description.split('\n').filter(l => l.trim().length > 0);
+              if (bullets.length === 0) return null;
+              const withMetric = bullets.filter(l => /\d+[%$kKmMx]?|\d{2,}/.test(l)).length;
+              const pct = withMetric / bullets.length;
+              const color = pct >= 0.5 ? '#16a34a' : '#d97706';
+              return (
+                <div style={{ fontSize: 11, marginTop: 4, color, fontWeight: 600 }}>
+                  {withMetric}/{bullets.length} bullets have metrics {pct >= 0.5 ? '✓' : '— add numbers to strengthen impact'}
+                </div>
+              );
+            })()}
           </div>
         </div>
       ))}

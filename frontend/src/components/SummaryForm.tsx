@@ -24,6 +24,15 @@ export default function SummaryForm({ value, onChange, onRewrite, isRewriting }:
         onChange={e => onChange(e.target.value)}
         placeholder="Write a 2-3 sentence professional summary..."
       />
+      {(() => {
+        const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
+        const over = wordCount > 80;
+        return wordCount > 0 ? (
+          <div style={{ fontSize: 11, marginTop: 4, color: over ? '#d97706' : '#64748b', fontWeight: over ? 600 : 400 }}>
+            {wordCount} words{over ? ' — aim for under 80' : ' / 80 recommended'}
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }
