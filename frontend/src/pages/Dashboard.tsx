@@ -771,7 +771,11 @@ export default function Dashboard() {
       await api.saveVersion(backendResumeId, versionName.trim());
       setVersionName('');
       setShowVersionInput(false);
-      addToast('Version saved!', 'success');
+      // Automatically open version history so the user can see + restore immediately
+      setShowVersions(true);
+      const res = await api.listVersions(backendResumeId);
+      setVersions(res.versions);
+      addToast('Version saved! See Version History below to restore it.', 'success');
     } catch {
       addToast('Failed to save version.', 'error');
     } finally {
