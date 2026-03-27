@@ -46,8 +46,8 @@ export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Pr
             />
           </div>
           <div>
-            <label className={labelCls}>Link (optional)</label>
-            <input className={inputCls} value={proj.link} onChange={e => onUpdate(proj.id, 'link', e.target.value)} placeholder="https://..." />
+            <label className={labelCls}>Link <span className="text-slate-400 normal-case tracking-normal font-normal">(GitHub repo or live demo URL)</span></label>
+            <input className={inputCls} value={proj.link} onChange={e => onUpdate(proj.id, 'link', e.target.value)} placeholder="https://github.com/you/project or live demo URL" />
           </div>
         </div>
       ))}

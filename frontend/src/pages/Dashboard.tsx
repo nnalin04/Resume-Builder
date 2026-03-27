@@ -348,13 +348,16 @@ const TOAST_COLORS: Record<ToastType, { bg: string; border: string; text: string
 
 // ─── Section helpers ──────────────────────────────────────────────────────────
 
-function SectionHeader({ title, open, onToggle }: { title: string; open: boolean; onToggle: () => void }) {
+function SectionHeader({ title, open, onToggle, badge }: { title: string; open: boolean; onToggle: () => void; badge?: string }) {
   return (
     <button
       onClick={onToggle}
       className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${open ? 'bg-surface-50 border-b border-slate-200' : 'bg-white hover:bg-slate-50 border-b border-slate-100'}`}
     >
-      <span className="text-sm font-semibold text-slate-700 tracking-tight">{title}</span>
+      <span className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-slate-700 tracking-tight">{title}</span>
+        {badge && <span className="text-xs text-slate-400 font-normal">{badge}</span>}
+      </span>
       <span className={`text-xs text-slate-400 transform transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▼</span>
     </button>
   );
@@ -924,14 +927,14 @@ export default function Dashboard() {
           <button
             onClick={handleDocxExport}
             disabled={exportingDocx}
-            title="Download as Word document — always free, ATS-safe"
+            title="Download as Word (.docx) — recommended for ATS portals, always free"
             className={`hidden sm:flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-xl border transition-all ${exportingDocx ? 'border-slate-300 text-slate-400 cursor-wait' : 'border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50'}`}
           >
             {exportingDocx
               ? <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             }
-            <span>{exportingDocx ? '...' : 'DOCX'}</span>
+            <span>{exportingDocx ? '...' : 'DOCX (ATS)'}</span>
           </button>
 
           <button
@@ -1202,7 +1205,18 @@ export default function Dashboard() {
             )}
 
             {/* Skills */}
-            <SectionHeader title="Skills" open={openSections.skills} onToggle={() => toggleSection('skills')} />
+            <SectionHeader
+              title="Skills"
+              open={openSections.skills}
+              onToggle={() => toggleSection('skills')}
+              badge={(() => {
+                const cats = resume.resumeData.skillCategories;
+                const count = cats?.length
+                  ? cats.reduce((n, c) => n + c.skills.split(',').filter(s => s.trim()).length, 0)
+                  : resume.resumeData.skills.split(',').filter(s => s.trim()).length;
+                return count > 0 ? `(${count} skills)` : undefined;
+              })()}
+            />
             {openSections.skills && (() => {
               const categorized = !!(resume.resumeData.skillCategories?.length);
               const cats = resume.resumeData.skillCategories ?? [];
@@ -1247,9 +1261,9 @@ export default function Dashboard() {
                             value={cat.skills}
                             onChange={e => resume.updateSkillCategory(cat.id, 'skills', e.target.value)}
                             placeholder={
-                              cat.id === 'languages'    ? 'Python, TypeScript, Go...' :
-                              cat.id === 'frameworks'   ? 'React, FastAPI, Django...' :
-                              cat.id === 'databases'    ? 'PostgreSQL, Redis, MongoDB...' :
+                              cat.id === 'languages'    ? 'Python 3.11, TypeScript 5, Go 1.22...' :
+                              cat.id === 'frameworks'   ? 'React 18, FastAPI 0.110, Django 5...' :
+                              cat.id === 'databases'    ? 'PostgreSQL 16, Redis 7, MongoDB 7...' :
                               cat.id === 'devops'       ? 'Docker, Kubernetes, GitHub Actions...' :
                               'Microservices, Event-Driven, REST...'
                             }
@@ -1263,7 +1277,7 @@ export default function Dashboard() {
                       rows={3}
                       value={resume.resumeData.skills}
                       onChange={e => resume.updateSkills(e.target.value)}
-                      placeholder="Python, React, TypeScript, System Design..."
+                      placeholder="Python 3.11, React 18, TypeScript 5, System Design..."
                     />
                   )}
                 </div>

@@ -216,7 +216,7 @@ async def generate_optimized_resume(
         + (f" at {latest_company}" if latest_company else "")
         + f", specialising in {lang_list or 'backend development'}"
         + (f" and {fw_list}" if fw_list else "")
-        + f". Seeking a {display_role} role in {target_industry}"
+        + f", targeting {display_role} opportunities in {target_industry}"
         + " with a focus on building scalable, high-performance systems."
         + (" Strong track record of delivering quantifiable results in fast-paced environments." if years >= 3 else "")
     )
@@ -412,7 +412,7 @@ def _chat_skills(sections: dict, jd: str) -> str:
 def _chat_ats(_sections: dict, _jd: str) -> str:
     return (
         "**ATS Optimisation Checklist:**\n\n"
-        "✅ Use a single-column layout (done — all 3 templates are ATS-safe)\n"
+        "✅ Use a single-column layout — avoid Two-Column and Professional templates when submitting via ATS portals\n"
         "✅ Start every bullet with a strong action verb\n"
         "✅ Quantify at least 50% of your achievements\n"
         "✅ Mirror exact keywords from the job description\n"
@@ -431,6 +431,6 @@ def _chat_tips() -> str:
         "4. **Keep it to 1–2 pages** — recruiters spend ~6 seconds on a first scan\n"
         "5. **ATS-safe PDF** — use the PDF export; avoid tables, columns, and images\n"
         "6. **Strong summary** — 3 sentences: who you are, what you do, what you want\n"
-        "7. **Skills section at the bottom** — ATS reads top-to-bottom; experience first\n\n"
+        "7. **Skills placement** — for tech roles, put skills above experience (ATS and recruiters see your stack first); for non-tech roles, experience first\n\n"
         "Click **Generate Resume** to apply these automatically to your resume."
     )
