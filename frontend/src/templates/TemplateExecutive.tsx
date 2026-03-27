@@ -2,15 +2,16 @@ import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
+import { getSkillSections } from '../utils/skillUtils';
 
 interface Props { data: ResumeData; fontSize?: FontSize; }
 
 export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
+  const { personalInfo: p, summary, experiences, projects, education, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
-  const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const skillSections = getSkillSections(data);
   const NAVY = '#1e2d4e';
 
   const visibleExperiences = experiences.filter(e => !e.hidden);
@@ -120,17 +121,22 @@ export default function TemplateExecutive({ data, fontSize = 'small' }: Props) {
             ))}
           </div>
           <div style={{ flex: 1 }}>
-            {allSkills.length > 0 && (
+            {skillSections.some(sec => sec.items.length > 0) && (
               <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                 <SectionTitle title="Core Competencies" f={f} navy={NAVY} />
-                <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 6px' }}>
-                  {allSkills.map((s, i) => (
-                    <span key={i} style={{
-                      fontSize: f(9.8), color: NAVY, background: '#eef1f8',
-                      borderRadius: 3, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', lineHeight: 1,
-                    }}>{s}</span>
-                  ))}
-                </div>
+                {skillSections.filter(sec => sec.items.length > 0).map((sec, si) => (
+                  <div key={si} style={{ marginBottom: si < skillSections.filter(s => s.items.length > 0).length - 1 ? 5 : 0 }}>
+                    {sec.label && <div style={{ fontSize: f(9.2), fontWeight: 700, color: NAVY, marginBottom: 2 }}>{sec.label}</div>}
+                    <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 6px' }}>
+                      {sec.items.map((s, i) => (
+                        <span key={i} style={{
+                          fontSize: f(9.8), color: NAVY, background: '#eef1f8',
+                          borderRadius: 3, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', lineHeight: 1,
+                        }}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
             {visibleProjects.length > 0 && (

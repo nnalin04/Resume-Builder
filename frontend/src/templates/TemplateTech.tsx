@@ -2,6 +2,7 @@ import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
+import { getSkillSections } from '../utils/skillUtils';
 
 interface Props { data: ResumeData; fontSize?: FontSize; }
 
@@ -10,11 +11,11 @@ const TEAL_LIGHT = '#f0fdfa';
 const TEAL_MID = '#14b8a6';
 
 export default function TemplateTech({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
+  const { personalInfo: p, summary, experiences, projects, education, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
-  const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const skillSections = getSkillSections(data);
 
   const visibleExperiences = experiences.filter(e => !e.hidden);
   const visibleProjects = projects.filter(p => !p.hidden);
@@ -65,18 +66,23 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
       </div>
 
       {/* Skills tags — shown prominently near top */}
-      {allSkills.length > 0 && (
+      {skillSections.some(sec => sec.items.length > 0) && (
         <div style={{ marginBottom: 14, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div style={{ fontSize: f(9.2), fontWeight: 700, color: TEAL, textTransform: 'uppercase' as const, letterSpacing: '0.08em', marginBottom: 6, fontFamily: 'monospace' }}>// Tech Stack</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 5px' }}>
-            {allSkills.map((s, i) => (
-              <span key={i} style={{
-                fontSize: f(9.5), color: TEAL, background: TEAL_LIGHT,
-                border: `1px solid ${TEAL_MID}`, borderRadius: 4,
-                padding: '2px 8px', display: 'inline-flex', alignItems: 'center', lineHeight: 1,
-              }}>{s}</span>
-            ))}
-          </div>
+          {skillSections.filter(sec => sec.items.length > 0).map((sec, si) => (
+            <div key={si} style={{ marginBottom: si < skillSections.filter(s => s.items.length > 0).length - 1 ? 6 : 0 }}>
+              {sec.label && <div style={{ fontSize: f(9.2), fontWeight: 700, color: TEAL, fontFamily: 'monospace', marginBottom: 3 }}>{sec.label}</div>}
+              <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 5px' }}>
+                {sec.items.map((s, i) => (
+                  <span key={i} style={{
+                    fontSize: f(9.5), color: TEAL, background: TEAL_LIGHT,
+                    border: `1px solid ${TEAL_MID}`, borderRadius: 4,
+                    padding: '2px 8px', display: 'inline-flex', alignItems: 'center', lineHeight: 1,
+                  }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

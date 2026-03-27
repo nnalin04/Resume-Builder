@@ -2,15 +2,16 @@ import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
+import { getSkillSections } from '../utils/skillUtils';
 
 interface Props { data: ResumeData; fontSize?: FontSize; }
 
 export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
+  const { personalInfo: p, summary, experiences, projects, education, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
-  const allSkills = skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const skillSections = getSkillSections(data);
   const ACCENT = '#6b7280';
 
   const visibleExperiences = experiences.filter(e => !e.hidden);
@@ -92,16 +93,19 @@ export default function TemplateMinimal({ data, fontSize = 'small' }: Props) {
         </div>
       )}
 
-      {allSkills.length > 0 && (
+      {skillSections.some(sec => sec.items.length > 0) && (
         <div style={{ marginBottom: 16, breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
           <div className="resume-section-title" style={{ fontSize: f(9.5), fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginBottom: 8 }}>Skills</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: '4px 6px' }}>
-            {allSkills.map((s, i) => (
-              <span key={i} style={{ fontSize: f(10.2), color: '#374151' }}>
-                {s}{i < allSkills.length - 1 ? <span style={{ color: '#d1d5db', marginLeft: 6 }}>·</span> : null}
-              </span>
-            ))}
-          </div>
+          {skillSections.filter(sec => sec.items.length > 0).map((sec, si) => (
+            <div key={si} style={{ marginBottom: si < skillSections.filter(s => s.items.length > 0).length - 1 ? 5 : 0 }}>
+              {sec.label && <span style={{ fontSize: f(9.5), fontWeight: 700, color: '#6b7280', marginRight: 4 }}>{sec.label}: </span>}
+              {sec.items.map((s, i) => (
+                <span key={i} style={{ fontSize: f(10.2), color: '#374151' }}>
+                  {s}{i < sec.items.length - 1 ? <span style={{ color: '#d1d5db', marginLeft: 6 }}>·</span> : null}
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
       )}
 

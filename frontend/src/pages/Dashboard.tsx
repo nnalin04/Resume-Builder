@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useResumeState } from '../hooks/useResumeState';
 import type { TemplateId, ResumeData } from '../types/resumeTypes';
+import { DEFAULT_SKILL_CATEGORIES } from '../utils/skillUtils';
 import type { FontSize } from '../utils/fontScales';
 import PersonalInfoForm from '../components/PersonalInfoForm';
 import SummaryForm from '../components/SummaryForm';
@@ -1202,18 +1203,72 @@ export default function Dashboard() {
 
             {/* Skills */}
             <SectionHeader title="Skills" open={openSections.skills} onToggle={() => toggleSection('skills')} />
-            {openSections.skills && (
-              <div className="p-5 bg-white">
-                <p className="text-xs text-slate-500 mb-2 font-medium">Comma-separated list of skills</p>
-                <textarea
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
-                  rows={3}
-                  value={resume.resumeData.skills}
-                  onChange={e => resume.updateSkills(e.target.value)}
-                  placeholder="Python, React, TypeScript, System Design..."
-                />
-              </div>
-            )}
+            {openSections.skills && (() => {
+              const categorized = !!(resume.resumeData.skillCategories?.length);
+              const cats = resume.resumeData.skillCategories ?? [];
+              return (
+                <div className="p-5 bg-white">
+                  {/* Mode toggle */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <p className="text-xs text-slate-500 font-medium">{categorized ? 'Skills by category' : 'Comma-separated list of skills'}</p>
+                    <button
+                      onClick={() => {
+                        if (categorized) {
+                          // flatten categories back to skills string and clear categories
+                          const flat = cats.map(c => c.skills.trim()).filter(Boolean).join(', ');
+                          if (flat) resume.updateSkills(flat);
+                          resume.replaceSkillCategories([]);
+                        } else {
+                          // seed categories from DEFAULT; keep existing flat skills in first category
+                          const seeded = DEFAULT_SKILL_CATEGORIES.map((c, i) =>
+                            i === 0 ? { ...c, skills: resume.resumeData.skills } : { ...c }
+                          );
+                          resume.replaceSkillCategories(seeded);
+                        }
+                      }}
+                      className="text-xs font-semibold px-3 py-1 rounded-full border transition-colors"
+                      style={{
+                        background: categorized ? '#eff6ff' : '#f8fafc',
+                        color: categorized ? '#2563eb' : '#64748b',
+                        borderColor: categorized ? '#bfdbfe' : '#e2e8f0',
+                      }}
+                    >
+                      {categorized ? '✕ Simple mode' : '⊞ Split by category'}
+                    </button>
+                  </div>
+
+                  {categorized ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {cats.map(cat => (
+                        <div key={cat.id}>
+                          <label className="text-xs font-semibold text-slate-600 mb-1 block">{cat.label}</label>
+                          <input
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                            value={cat.skills}
+                            onChange={e => resume.updateSkillCategory(cat.id, 'skills', e.target.value)}
+                            placeholder={
+                              cat.id === 'languages'    ? 'Python, TypeScript, Go...' :
+                              cat.id === 'frameworks'   ? 'React, FastAPI, Django...' :
+                              cat.id === 'databases'    ? 'PostgreSQL, Redis, MongoDB...' :
+                              cat.id === 'devops'       ? 'Docker, Kubernetes, GitHub Actions...' :
+                              'Microservices, Event-Driven, REST...'
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <textarea
+                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                      rows={3}
+                      value={resume.resumeData.skills}
+                      onChange={e => resume.updateSkills(e.target.value)}
+                      placeholder="Python, React, TypeScript, System Design..."
+                    />
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Experience */}
             <SectionHeader title="Work Experience" open={openSections.experience} onToggle={() => toggleSection('experience')} />

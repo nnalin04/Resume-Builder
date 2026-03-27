@@ -2,6 +2,7 @@ import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
+import { getSkillSections } from '../utils/skillUtils';
 
 interface Props { data: ResumeData; fontSize?: FontSize; }
 
@@ -36,8 +37,9 @@ function ArrowBullets({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
+  const { personalInfo: p, summary, experiences, projects, education, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
+  const skillSections = getSkillSections(data);
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
   const visibleExperiences = experiences.filter(e => !e.hidden);
@@ -153,19 +155,20 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
         {/* Right column — Skills + Projects + Education (~43%) */}
         <div style={{ width: '43%', padding: '14px 30px 18px 20px', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
           {/* Skills */}
-          {skills && (
+          {skillSections.some(sec => sec.items.length > 0) && (
             <div style={{ marginBottom: '14px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
               <ColHeader title="Skills" fm={fm} />
               <div style={{
-                background: '#dce8f7',
-                border: '1.5px solid #90bde8',
-                borderRadius: '8px',
-                padding: '10px 13px',
-                fontSize: f(10.5),
-                color: '#1a1a1a',
-                lineHeight: 1.65,
+                background: '#dce8f7', border: '1.5px solid #90bde8',
+                borderRadius: '8px', padding: '10px 13px', fontSize: f(10.5), color: '#1a1a1a', lineHeight: 1.65,
               }}>
-                {skills}
+                {skillSections.filter(sec => sec.items.length > 0).map((sec, si) => (
+                  <div key={si}>
+                    {sec.label && <span style={{ fontWeight: 700 }}>{sec.label}: </span>}
+                    {sec.items.join(', ')}
+                    {si < skillSections.filter(s => s.items.length > 0).length - 1 && <br />}
+                  </div>
+                ))}
               </div>
             </div>
           )}

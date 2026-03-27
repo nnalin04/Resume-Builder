@@ -58,6 +58,12 @@ export interface CustomSection {
   items: CustomSectionItem[];
 }
 
+export interface SkillCategory {
+  id: string;
+  label: string;
+  skills: string; // comma-separated
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -65,6 +71,7 @@ export interface ResumeData {
   projects: Project[];
   education: Education[];
   skills: string;
+  skillCategories?: SkillCategory[]; // optional structured categories
   certifications: Certification[];
   customSections?: CustomSection[];
 }

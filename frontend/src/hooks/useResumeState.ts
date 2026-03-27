@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type { ResumeData, Experience, Project, Education, Certification, CustomSection } from '../types/resumeTypes';
+import type { ResumeData, Experience, Project, Education, Certification, CustomSection, SkillCategory } from '../types/resumeTypes';
 
 const STORAGE_KEY = 'resume_draft';
 
@@ -192,6 +192,17 @@ export function useResumeState() {
   const replaceCustomSections = (sections: CustomSection[]) =>
     set(prev => ({ ...prev, customSections: sections }));
 
+  const updateSkillCategory = (id: string, field: 'label' | 'skills', value: string) =>
+    set(prev => ({
+      ...prev,
+      skillCategories: (prev.skillCategories ?? []).map(c =>
+        c.id === id ? { ...c, [field]: value } : c
+      ),
+    }));
+
+  const replaceSkillCategories = (categories: SkillCategory[]) =>
+    set(prev => ({ ...prev, skillCategories: categories }));
+
   return {
     resumeData,
     isDirty,
@@ -204,5 +215,6 @@ export function useResumeState() {
     addEducation, updateEducation, removeEducation, replaceEducation,
     addCertification, updateCertification, removeCertification, replaceCertifications,
     replaceCustomSections,
+    updateSkillCategory, replaceSkillCategories,
   };
 }

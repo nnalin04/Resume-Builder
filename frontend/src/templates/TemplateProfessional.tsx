@@ -2,6 +2,7 @@ import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
+import { getSkillSections } from '../utils/skillUtils';
 
 interface Props { data: ResumeData; fontSize?: FontSize; }
 
@@ -38,8 +39,9 @@ function BulletLines({ text, fm }: { text: string; fm: number }) {
 }
 
 export default function TemplateProfessional({ data, fontSize = 'small' }: Props) {
-  const { personalInfo: p, summary, experiences, projects, education, skills, certifications, customSections } = data;
+  const { personalInfo: p, summary, experiences, projects, education, certifications, customSections } = data;
   const fm = FONT_MULT[fontSize];
+  const skillSections = getSkillSections(data);
   const f = (px: number) => Math.round(px * fm * 10) / 10;
 
   const visibleExperiences = experiences.filter(e => !e.hidden);
@@ -89,25 +91,23 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
 
         {/* Left sidebar */}
         <div style={{ width: '36%', background: '#1e3a5f', padding: '15px 22px 22px', color: '#fff', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
-          {skills && (
+          {skillSections.some(sec => sec.items.length > 0) && (
             <>
               <SideSection title="Skills" fm={fm} />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 3px', alignItems: 'center' }}>
-                {skills.split(',').map((s, i) => (
-                  <span key={i} style={{
-                    fontSize: f(9),
-                    color: 'rgba(255,255,255,0.9)',
-                    background: 'rgba(255,255,255,0.12)',
-                    border: '1px solid rgba(255,255,255,0.25)',
-                    borderRadius: '3px',
-                    padding: '2px 5px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    lineHeight: 1,
-                    whiteSpace: 'nowrap' as const,
-                  }}>{s.trim()}</span>
-                ))}
-              </div>
+              {skillSections.filter(sec => sec.items.length > 0).map((sec, si) => (
+                <div key={si} style={{ marginBottom: si < skillSections.filter(s => s.items.length > 0).length - 1 ? 6 : 0 }}>
+                  {sec.label && <div style={{ fontSize: f(8.5), fontWeight: 700, color: 'rgba(255,255,255,0.55)', marginBottom: 2 }}>{sec.label}</div>}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px 3px', alignItems: 'center' }}>
+                    {sec.items.map((s, i) => (
+                      <span key={i} style={{
+                        fontSize: f(9), color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.12)',
+                        border: '1px solid rgba(255,255,255,0.25)', borderRadius: '3px', padding: '2px 5px',
+                        display: 'inline-flex', alignItems: 'center', lineHeight: 1, whiteSpace: 'nowrap' as const,
+                      }}>{s}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </>
           )}
 
