@@ -480,6 +480,7 @@ export default function Dashboard() {
       const allClosed: Record<Section, boolean> = {
         personal: false, summary: false, skills: false,
         experience: false, projects: false, education: false, certifications: false,
+        customSections: false,
       };
       return wasOpen ? allClosed : { ...allClosed, [s]: true };
     });
