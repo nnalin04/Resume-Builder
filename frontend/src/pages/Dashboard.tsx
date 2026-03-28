@@ -1064,7 +1064,8 @@ export default function Dashboard() {
             {openJD && <div className="p-5 bg-white border-b border-slate-100">
               <p className="text-xs text-slate-500 mb-2 font-medium">Paste the job ad to get an ATS score & AI suggestions</p>
               <textarea
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none shadow-inner"
+                className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none shadow-inner"
+                style={{ fontSize: 11 }}
                 rows={4}
                 value={jobDescription}
                 onChange={e => setJobDescription(e.target.value)}
@@ -1311,7 +1312,8 @@ export default function Dashboard() {
                         <div key={cat.id}>
                           <label className="text-xs font-semibold text-slate-600 mb-1 block">{cat.label}</label>
                           <input
-                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                            style={{ fontSize: 11 }}
                             value={cat.skills}
                             onChange={e => resume.updateSkillCategory(cat.id, 'skills', e.target.value)}
                             placeholder={
@@ -1327,7 +1329,8 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <textarea
-                      className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                      className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
+                      style={{ fontSize: 11 }}
                       rows={3}
                       value={resume.resumeData.skills}
                       onChange={e => resume.updateSkills(e.target.value)}

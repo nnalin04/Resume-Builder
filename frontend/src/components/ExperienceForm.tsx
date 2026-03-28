@@ -10,7 +10,7 @@ interface Props {
 }
 
 const s = {
-  input: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 8px', fontSize: 12, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
+  input: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '3px 7px', fontSize: 11, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
   label: { display: 'block', fontSize: 11, fontWeight: 500, color: '#4b5563', marginBottom: 4 },
   card: { border: '1px solid #f3f4f6', borderRadius: 8, padding: 12, background: '#f9fafb', marginBottom: 12 },
   cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -18,7 +18,7 @@ const s = {
   removeBtn: { fontSize: 12, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 },
   field: { marginBottom: 8 },
-  textarea: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '4px 8px', fontSize: 12, resize: 'none' as const, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
+  textarea: { width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '3px 7px', fontSize: 11, resize: 'none' as const, background: '#fff', outline: 'none', boxSizing: 'border-box' as const },
   addBtn: { width: '100%', padding: '8px 0', border: '2px dashed #93c5fd', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#3b82f6', background: 'none', cursor: 'pointer' },
   checkRow: { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#4b5563', marginBottom: 8, cursor: 'pointer' },
   rewriteBtn: { fontSize: 12, color: '#4f46e5', background: '#e0e7ff', border: 'none', padding: '2px 6px', borderRadius: 4, cursor: 'pointer', fontWeight: 500 },
