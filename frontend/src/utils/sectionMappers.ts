@@ -17,6 +17,7 @@ interface RawEdu {
   degree?: string;
   field?: string;
   graduation_date?: string;
+  start_year?: string;
 }
 
 interface RawProj {
@@ -47,6 +48,7 @@ export function mapEducation(raw: RawEdu[]): Education[] {
     degree: edu.degree || '',
     field: edu.field || '',
     year: edu.graduation_date || '',
+    ...(edu.start_year ? { start_year: edu.start_year } : {}),
   }));
 }
 

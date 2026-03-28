@@ -147,7 +147,7 @@ export default function TemplateModern({ data, fontSize = 'small' }: Props) {
                 <div style={{ fontSize: f(11.1), fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>{edu.institution}</div>
                 <div style={{ fontSize: f(10.4), color: '#64748b', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
               </div>
-              <div style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>{edu.year}</div>
+              <div style={{ fontSize: f(10.4), color: '#64748b', background: '#f1f5f9', padding: '1px 6px', borderRadius: '10px', lineHeight: 1.5, flexShrink: 0 }}>{edu.start_year ? `${edu.start_year} – ${edu.year}` : edu.year}</div>
             </div>
           ))}
         </>

@@ -118,7 +118,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
                 <div key={edu.id} className="resume-item" style={{ marginBottom: '8px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{edu.institution}</div>
                   <div style={{ fontSize: f(10), color: 'rgba(255,255,255,0.75)', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` · ${edu.field}`}</div>
-                  <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{edu.year}</div>
+                  <div style={{ fontSize: f(10), color: '#93c5fd', lineHeight: 1.3 }}>{edu.start_year ? `${edu.start_year} – ${edu.year}` : edu.year}</div>
                 </div>
               ))}
             </>

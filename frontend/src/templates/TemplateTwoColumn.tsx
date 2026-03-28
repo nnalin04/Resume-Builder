@@ -196,7 +196,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
               {visibleEducation.map(edu => (
                 <div key={edu.id} className="resume-item" style={{ marginBottom: '6px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>
                   <div style={{ fontSize: f(10.7), color: '#111', lineHeight: 1.4 }}>
-                    {edu.institution}{edu.year && ` (${edu.year})`}
+                    {edu.institution}{edu.year && ` (${edu.start_year ? `${edu.start_year} – ${edu.year}` : edu.year})`}
                   </div>
                   <div style={{ fontSize: f(10.3), color: '#444', lineHeight: 1.4 }}>
                     {edu.degree}{edu.field && `, ${edu.field}`}

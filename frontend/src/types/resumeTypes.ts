@@ -33,6 +33,7 @@ export interface Education {
   degree: string;
   field: string;
   year: string;
+  start_year?: string;
   hidden?: boolean;
 }
 

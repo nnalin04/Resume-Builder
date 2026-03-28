@@ -7,7 +7,7 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
+const inputCls = 'w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
 const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
 
 export default function EducationForm({ education, onAdd, onUpdate, onRemove }: Props) {
@@ -42,9 +42,26 @@ export default function EducationForm({ education, onAdd, onUpdate, onRemove }: 
               <input className={inputCls} value={edu.field} onChange={e => onUpdate(edu.id, 'field', e.target.value)} placeholder="Computer Science" />
             </div>
           </div>
-          <div>
-            <label className={labelCls}>Year</label>
-            <input className={inputCls} value={edu.year} onChange={e => onUpdate(edu.id, 'year', e.target.value)} placeholder="2022" />
+          {/* Date range: From → To */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={labelCls}>From</label>
+              <input
+                className={inputCls}
+                value={edu.start_year ?? ''}
+                onChange={e => onUpdate(edu.id, 'start_year', e.target.value)}
+                placeholder="2018"
+              />
+            </div>
+            <div>
+              <label className={labelCls}>To (or Expected)</label>
+              <input
+                className={inputCls}
+                value={edu.year}
+                onChange={e => onUpdate(edu.id, 'year', e.target.value)}
+                placeholder="2022 or Present"
+              />
+            </div>
           </div>
         </div>
       ))}

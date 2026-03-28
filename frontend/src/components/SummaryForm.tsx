@@ -18,7 +18,7 @@ export default function SummaryForm({ value, onChange, onRewrite, isRewriting }:
         </button>
       )}
       <textarea
-        style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 10px', fontSize: 13, resize: 'none', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
+        style={{ width: '100%', border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 8px', fontSize: 12, resize: 'none', background: '#fff', outline: 'none', boxSizing: 'border-box' }}
         rows={4}
         value={value}
         onChange={e => onChange(e.target.value)}

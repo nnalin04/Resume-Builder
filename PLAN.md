@@ -61,6 +61,14 @@ Based on `GAP_ANALYSIS.md`. Each item has a checkbox — check it off when shipp
   - Progress bar (green/amber/red) + separate rows for Required vs Preferred skills
   - Added `atsRequiredMatched`/`atsPreferredMatched` state; data from API
 
+- [x] **2.8** Education date range (start → end year) — `EducationForm.tsx` + `resumeTypes.ts` + 5 templates
+  - Replace single "Year" field with "From" + "To (or Expected)" side-by-side inputs
+  - Update `Education` type to add `start_year?: string`; update all 5 templates that render `edu.year`
+  - Also update Certification date placeholder to hint at range format
+
+- [x] **2.9** Reduce sidebar form input font size — all `*Form.tsx` components
+  - Current `text-sm` (14px) is too large for the sidebar — reduce to 12px for better readability
+
 ---
 
 ## Phase 3 — Cross-Stack Features

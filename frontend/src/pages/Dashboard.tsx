@@ -54,6 +54,7 @@ function resumeDataToSections(data: ResumeData): object {
       degree: e.degree,
       field: e.field,
       graduation_date: e.year,
+      ...(e.start_year ? { start_year: e.start_year } : {}),
     })),
     skills: {
       languages: [],

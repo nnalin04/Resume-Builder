@@ -152,7 +152,7 @@ export default function TemplateClassic({ data, fontSize = 'small' }: Props) {
                 <div style={{ fontSize: f(11.1), fontWeight: 600, color: '#0f0f0f', lineHeight: 1.3 }}>{edu.institution}</div>
                 <div style={{ fontSize: f(10.4), color: '#555', lineHeight: 1.3 }}>{edu.degree}{edu.field && ` — ${edu.field}`}</div>
               </div>
-              <div style={{ fontSize: f(10.3), color: '#555', flexShrink: 0, paddingTop: '1px' }}>{edu.year}</div>
+              <div style={{ fontSize: f(10.3), color: '#555', flexShrink: 0, paddingTop: '1px' }}>{edu.start_year ? `${edu.start_year} – ${edu.year}` : edu.year}</div>
             </div>
           ))}
         </>

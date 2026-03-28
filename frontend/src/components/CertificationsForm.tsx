@@ -7,7 +7,7 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
+const inputCls = 'w-full border border-slate-200 rounded-lg px-2.5 py-1 text-xs bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
 const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
 
 export default function CertificationsForm({ certifications, onAdd, onUpdate, onRemove }: Props) {
@@ -39,7 +39,7 @@ export default function CertificationsForm({ certifications, onAdd, onUpdate, on
             </div>
             <div>
               <label className={labelCls}>Date (optional)</label>
-              <input className={inputCls} value={cert.date} onChange={e => onUpdate(cert.id, 'date', e.target.value)} placeholder="2024" />
+              <input className={inputCls} value={cert.date} onChange={e => onUpdate(cert.id, 'date', e.target.value)} placeholder="2024 or 2023 – 2024" />
             </div>
           </div>
         </div>
