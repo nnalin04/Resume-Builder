@@ -216,6 +216,7 @@ class LoginRequest(BaseModel):
 
 class GoogleCallbackRequest(BaseModel):
     code: str
+    redirect_uri: Optional[str] = None
 
 def _user_dict(user: models.User) -> dict:
     return {
@@ -287,7 +288,7 @@ def login(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
 @limiter.limit("10/minute")
 async def google_callback(request: Request, body: GoogleCallbackRequest, db: Session = Depends(get_db)):
     """Exchange Google OAuth code for JWT. Creates user on first login."""
-    google_user = await exchange_google_code(body.code)
+    google_user = await exchange_google_code(body.code, body.redirect_uri)
     email = google_user.get("email")
     if not email:
         raise HTTPException(status_code=400, detail="Google did not return an email.")

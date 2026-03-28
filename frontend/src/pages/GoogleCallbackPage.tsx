@@ -18,7 +18,8 @@ export default function GoogleCallbackPage() {
       return;
     }
 
-    api.auth.googleCallback(code)
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    api.auth.googleCallback(code, redirectUri)
       .then(resp => {
         localStorage.setItem('auth_token', resp.token);
         return refreshUser();

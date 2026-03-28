@@ -80,10 +80,10 @@ export const api = {
         body: JSON.stringify({ email, password }),
       }),
 
-    googleCallback: (code: string) =>
+    googleCallback: (code: string, redirectUri: string) =>
       request<AuthResponse>('/api/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, redirect_uri: redirectUri }),
       }),
 
     me: () => request<AuthUser>('/api/auth/me'),

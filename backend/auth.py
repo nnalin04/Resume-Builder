@@ -86,7 +86,7 @@ def get_current_user_optional(
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
-async def exchange_google_code(code: str) -> dict:
+async def exchange_google_code(code: str, redirect_uri: Optional[str] = None) -> dict:
     """Exchange Google authorization code for user info."""
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
@@ -95,7 +95,7 @@ async def exchange_google_code(code: str) -> dict:
                 "code": code,
                 "client_id": GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri": GOOGLE_REDIRECT_URI,
+                "redirect_uri": redirect_uri or GOOGLE_REDIRECT_URI,
                 "grant_type": "authorization_code",
             },
         )
