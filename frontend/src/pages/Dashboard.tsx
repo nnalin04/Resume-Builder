@@ -849,6 +849,7 @@ export default function Dashboard() {
   }[template];
 
   return (
+    <>
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1720,6 +1721,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+    </motion.div>
       {/* ─── Print-only area ─────────────────────────────────────────────── */}
       {/* 🔒 LOCKED — commit a4ad0d2 — DO NOT MODIFY THIS BLOCK               */}
       {/* Hidden in browser; @media print makes it the only visible element.   */}
@@ -1729,6 +1731,6 @@ export default function Dashboard() {
       <div id="resume-print-area" style={{ display: 'none' }}>
         <PreviewComponent data={resume.resumeData} fontSize={fontSize} />
       </div>
-    </motion.div>
+    </>
   );
 }
