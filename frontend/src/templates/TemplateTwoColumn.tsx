@@ -110,7 +110,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
         {/* Left column — Work Experience (~57%) */}
-        <div style={{ width: '57%', padding: '14px 20px 18px 48px', borderRight: '1px solid #d0d0d0', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
+        <div style={{ width: '57%', padding: '14px 20px 18px 48px', borderRight: '1px solid #d0d0d0', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const, boxSizing: 'border-box' as const }}>
           {visibleExperiences.length > 0 && (
             <>
               <ColHeader title="Work Experience" fm={fm} />
@@ -153,7 +153,7 @@ export default function TemplateTwoColumn({ data, fontSize = 'small' }: Props) {
         </div>
 
         {/* Right column — Skills + Projects + Education (~43%) */}
-        <div style={{ width: '43%', padding: '14px 30px 18px 20px', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
+        <div style={{ width: '43%', padding: '14px 30px 18px 20px', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const, boxSizing: 'border-box' as const }}>
           {/* Skills */}
           {skillSections.some(sec => sec.items.length > 0) && (
             <div style={{ marginBottom: '14px', breakInside: 'avoid' as const, pageBreakInside: 'avoid' as const }}>

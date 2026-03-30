@@ -57,8 +57,8 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
       background: '#fff',
       width: '794px',
       minHeight: '1123px',
-      display: 'flex',
-      flexDirection: 'column' as const,
+      display: 'grid',
+      gridTemplateRows: 'auto 1fr',
       lineHeight: 1.38,
       boxSizing: 'border-box' as const,
       WebkitPrintColorAdjust: 'exact' as const,
@@ -87,10 +87,10 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
       </div>
 
       {/* Two-column body */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', minHeight: 0, overflow: 'hidden' }}>
 
         {/* Left sidebar */}
-        <div style={{ width: '36%', background: '#1e3a5f', padding: '15px 22px 22px', color: '#fff', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const }}>
+        <div style={{ width: '36%', background: '#1e3a5f', padding: '15px 22px 22px', color: '#fff', overflow: 'hidden', overflowWrap: 'break-word' as const, wordBreak: 'break-word' as const, boxSizing: 'border-box' as const }}>
           {skillSections.some(sec => sec.items.length > 0) && (
             <>
               <SideSection title="Skills" fm={fm} />
@@ -139,7 +139,7 @@ export default function TemplateProfessional({ data, fontSize = 'small' }: Props
         </div>
 
         {/* Right main */}
-        <div style={{ flex: 1, padding: '15px 30px 22px', overflow: 'hidden' }}>
+        <div style={{ flex: 1, padding: '15px 30px 22px', overflow: 'hidden', boxSizing: 'border-box' as const }}>
           {visibleExperiences.length > 0 && (
             <>
               <MainSection title="Experience" fm={fm} />

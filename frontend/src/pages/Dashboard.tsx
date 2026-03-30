@@ -851,6 +851,7 @@ export default function Dashboard() {
   return (
     <>
     <motion.div
+      id="resume-editor-shell"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
