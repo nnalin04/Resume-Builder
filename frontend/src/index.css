@@ -102,18 +102,20 @@
   * {
     @apply border-border;
   }
+}
 
 /* Print area is hidden in the browser */
 #resume-print-area {
   display: none;
 }
 
-@media print {
-  @page {
-    size: A4;
-    margin: 0;
-  }
+/* @page and @media print MUST be outside @layer — browsers ignore @page inside @layer */
+@page {
+  size: A4;
+  margin: 0;
+}
 
+@media print {
   /* Hide everything on the page */
   body * {
     visibility: hidden !important;
@@ -127,6 +129,10 @@
     top: 0 !important;
     left: 0 !important;
     width: 794px !important;
+    height: 1123px !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: white !important;
   }
 
@@ -138,5 +144,4 @@
   a[href]::after {
     content: none !important;
   }
-}
 }
