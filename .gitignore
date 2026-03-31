@@ -47,3 +47,15 @@ frontend/.stitch/
 # Markdown drafts / notes
 Comp_feature.md
 TODO.md
+
+# AI agent workspace files (OpenAI Codex, Gemini, Roo, etc.)
+.agents/
+.roo/
+.roomodes
+AGENTS.md
+
+# Baseline CSS snapshots (debugging artifacts)
+baseline_*.css
+
+# Local planning docs
+plans/

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Experience, Education, Project, Certification } from '../types/resumeTypes';
+import type { Experience, Education, Project, Certification, ResumeData } from '../types/resumeTypes';
 
 // ─── Raw backend shapes ────────────────────────────────────────────────────────
 
@@ -84,4 +84,52 @@ export function flattenSkills(skills: Record<string, string[]> | string): string
   if (typeof skills === 'string') return skills;
   const cats = ['languages', 'frameworks', 'tools', 'databases', 'other'] as const;
   return cats.flatMap(c => (Array.isArray(skills[c]) ? skills[c] : [])).join(', ');
+}
+
+// ─── Frontend ResumeData → backend sections format ────────────────────────────
+
+export function resumeDataToSections(data: ResumeData): object {
+  return {
+    contact: {
+      name: data.personalInfo.name,
+      email: data.personalInfo.email,
+      phone: data.personalInfo.phone,
+      location: data.personalInfo.location,
+      linkedin: data.personalInfo.linkedin,
+      github: data.personalInfo.github,
+    },
+    summary: data.summary,
+    experience: data.experiences.map(e => ({
+      company: e.company,
+      title: e.position,
+      location: e.location,
+      start_date: e.startDate,
+      end_date: e.currentlyWorking ? 'Present' : e.endDate,
+      bullets: e.description ? e.description.split('\n').filter((b: string) => b.trim()) : [],
+    })),
+    education: data.education.map(e => ({
+      institution: e.institution,
+      degree: e.degree,
+      field: e.field,
+      graduation_date: e.year,
+      ...(e.start_year ? { start_year: e.start_year } : {}),
+    })),
+    skills: {
+      languages: [],
+      frameworks: [],
+      tools: [],
+      databases: [],
+      other: data.skills ? data.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+    },
+    projects: data.projects.map(p => ({
+      name: p.name,
+      description: p.description,
+      link: p.link,
+    })),
+    certifications: (data.certifications ?? []).map(c => ({
+      name: c.name,
+      issuer: c.issuer,
+      date: c.date,
+    })),
+  };
 }
