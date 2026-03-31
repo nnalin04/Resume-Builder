@@ -254,11 +254,12 @@ async def serve_avatar(filename: str):
 def send_verification(
     request: Request,
     current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     if current_user.email_verified:
         raise HTTPException(status_code=400, detail="Email is already verified.")
     otp = generate_otp()
-    store_otp(current_user.id, otp)
+    store_otp(current_user.id, otp, db)
     if not smtp_is_configured():
         if os.getenv("ENV", "production") == "development":
             logger.warning("SMTP not configured. OTP for %s: %s", current_user.email, otp)
@@ -282,15 +283,15 @@ def verify_email(
 ):
     if current_user.email_verified:
         return {"detail": "Email already verified.", "email_verified": True}
-    entry = get_otp_entry(current_user.id)
+    entry = get_otp_entry(current_user.id, db)
     if not entry:
         raise HTTPException(status_code=400, detail="No verification code found. Please request a new one.")
     if datetime.now(timezone.utc) > entry["expires_at"]:
-        clear_otp(current_user.id)
+        clear_otp(current_user.id, db)
         raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
     if not hmac.compare_digest(body.otp.strip(), entry["otp"]):
         raise HTTPException(status_code=400, detail="Incorrect verification code.")
-    clear_otp(current_user.id)
+    clear_otp(current_user.id, db)
     current_user.email_verified = True
     db.commit()
     return {"detail": "Email verified successfully.", "email_verified": True}

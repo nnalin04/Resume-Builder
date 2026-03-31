@@ -4,30 +4,51 @@ from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from sqlalchemy.orm import Session
+
+import models
 from services.auth_service import SMTP_FROM, SMTP_HOST, SMTP_PASS, SMTP_PORT, SMTP_USER
 
 
 OTP_TTL_MINUTES = 10
-_otp_store: dict[int, dict] = {}
 
 
 def generate_otp() -> str:
     return f"{secrets.randbelow(1000000):06d}"
 
 
-def store_otp(user_id: int, otp: str) -> None:
-    _otp_store[user_id] = {
-        "otp": otp,
-        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=OTP_TTL_MINUTES),
-    }
+def store_otp(user_id: int, otp: str, db: Session) -> None:
+    """Persist OTP to DB. Deletes any existing token for this user first."""
+    db.query(models.OtpToken).filter(models.OtpToken.user_id == user_id).delete()
+    token = models.OtpToken(
+        user_id=user_id,
+        otp_hash=otp,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=OTP_TTL_MINUTES),
+    )
+    db.add(token)
+    db.commit()
 
 
-def get_otp_entry(user_id: int) -> dict | None:
-    return _otp_store.get(user_id)
+def get_otp_entry(user_id: int, db: Session) -> dict | None:
+    """Return the active OTP entry for a user, or None if expired/missing."""
+    token = (
+        db.query(models.OtpToken)
+        .filter(
+            models.OtpToken.user_id == user_id,
+            models.OtpToken.used == False,  # noqa: E712
+            models.OtpToken.expires_at > datetime.now(timezone.utc),
+        )
+        .first()
+    )
+    if token is None:
+        return None
+    return {"otp": token.otp_hash, "expires_at": token.expires_at, "_id": token.id}
 
 
-def clear_otp(user_id: int) -> None:
-    _otp_store.pop(user_id, None)
+def clear_otp(user_id: int, db: Session) -> None:
+    """Mark all OTP tokens for this user as used."""
+    db.query(models.OtpToken).filter(models.OtpToken.user_id == user_id).update({"used": True})
+    db.commit()
 
 
 def smtp_is_configured() -> bool:
