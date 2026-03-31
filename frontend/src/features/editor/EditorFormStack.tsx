@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { ReactNode } from 'react';
 
 import { DEFAULT_SKILL_CATEGORIES } from '../../utils/skillUtils';
 import PersonalInfoForm from '../../components/PersonalInfoForm';
@@ -7,62 +7,39 @@ import ExperienceForm from '../../components/ExperienceForm';
 import ProjectsForm from '../../components/ProjectsForm';
 import EducationForm from '../../components/EducationForm';
 import CertificationsForm from '../../components/CertificationsForm';
-import AtsPanel from '../ats/AtsPanel';
-import ChatPanel from '../chat/ChatPanel';
-import { VersionHistoryPanel } from '../versioning/VersionPanel';
 
 
 type Section = 'personal' | 'summary' | 'skills' | 'experience' | 'projects' | 'education' | 'certifications' | 'customSections';
 
 interface EditorFormStackProps {
+  // Layout slots — pre-rendered by Dashboard, no cross-feature coupling
+  atsPanel: ReactNode;
+  versionPanel: ReactNode;
+  chatPanel: ReactNode;
+
+  // Section accordion
   openSections: Record<Section, boolean>;
   toggleSection: (section: Section) => void;
+
+  // Resume data + mutations
   resume: any;
+
+  // AI rewrite callbacks
   handleRewriteSummary: () => Promise<void>;
   isRewritingSummary: boolean;
   handleRewriteExperience: (id: string, text: string) => Promise<void>;
   rewritingExperienceId: string | null;
-  openJD: boolean;
-  setOpenJD: (value: boolean | ((prev: boolean) => boolean)) => void;
-  jobDescription: string;
-  setJobDescription: (value: string) => void;
-  atsScore: number | null;
-  atsMatched: string[];
-  atsMissing: string[];
-  atsRequiredMissing: string[];
-  atsPreferredMissing: string[];
-  atsRequiredMatched: string[];
-  atsPreferredMatched: string[];
-  atsSeniority: string;
-  atsExpYears: number;
-  showMatchedKeywords: boolean;
-  setShowMatchedKeywords: (value: boolean | ((prev: boolean) => boolean)) => void;
-  isScoring: boolean;
-  handleScore: () => Promise<void>;
-  isOptimizing: boolean;
-  handleOptimize: () => Promise<void>;
-  appendMissingKeyword: (keyword: string) => void;
-  resetAtsState: () => void;
-  backendResumeId: number | null;
-  showVersions: boolean;
-  isLoadingVersions: boolean;
-  versions: { id: number; name: string; created_at: string }[];
-  handleLoadVersions: () => Promise<void>;
-  handleRestoreVersion: (versionId: number) => Promise<void>;
-  chatOpen: boolean;
-  setChatOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
-  chatMessages: { role: 'user' | 'assistant'; text: string }[];
-  chatInput: string;
-  setChatInput: (value: string) => void;
-  isChatLoading: boolean;
-  chatEndRef: RefObject<HTMLDivElement | null>;
-  handleChatSend: () => Promise<void>;
+
+  // Mobile
   isMobile: boolean;
   setShowMobilePreview: (value: boolean) => void;
 }
 
 export default function EditorFormStack(props: EditorFormStackProps) {
   const {
+    atsPanel,
+    versionPanel,
+    chatPanel,
     openSections,
     toggleSection,
     resume,
@@ -70,79 +47,15 @@ export default function EditorFormStack(props: EditorFormStackProps) {
     isRewritingSummary,
     handleRewriteExperience,
     rewritingExperienceId,
-    openJD,
-    setOpenJD,
-    jobDescription,
-    setJobDescription,
-    atsScore,
-    atsMatched,
-    atsMissing,
-    atsRequiredMissing,
-    atsPreferredMissing,
-    atsRequiredMatched,
-    atsPreferredMatched,
-    atsSeniority,
-    atsExpYears,
-    showMatchedKeywords,
-    setShowMatchedKeywords,
-    isScoring,
-    handleScore,
-    isOptimizing,
-    handleOptimize,
-    appendMissingKeyword,
-    resetAtsState,
-    backendResumeId,
-    showVersions,
-    isLoadingVersions,
-    versions,
-    handleLoadVersions,
-    handleRestoreVersion,
-    chatOpen,
-    setChatOpen,
-    chatMessages,
-    chatInput,
-    setChatInput,
-    isChatLoading,
-    chatEndRef,
-    handleChatSend,
     isMobile,
     setShowMobilePreview,
   } = props;
 
   return (
     <>
-      <AtsPanel
-        openJD={openJD}
-        setOpenJD={setOpenJD}
-        jobDescription={jobDescription}
-        setJobDescription={setJobDescription}
-        atsScore={atsScore}
-        atsMatched={atsMatched}
-        atsMissing={atsMissing}
-        atsRequiredMissing={atsRequiredMissing}
-        atsPreferredMissing={atsPreferredMissing}
-        atsRequiredMatched={atsRequiredMatched}
-        atsPreferredMatched={atsPreferredMatched}
-        atsSeniority={atsSeniority}
-        atsExpYears={atsExpYears}
-        showMatchedKeywords={showMatchedKeywords}
-        setShowMatchedKeywords={setShowMatchedKeywords}
-        isScoring={isScoring}
-        handleScore={handleScore}
-        isOptimizing={isOptimizing}
-        handleOptimize={handleOptimize}
-        appendMissingKeyword={appendMissingKeyword}
-        resetAtsState={resetAtsState}
-      />
+      {atsPanel}
 
-      <VersionHistoryPanel
-        backendResumeId={backendResumeId}
-        showVersions={showVersions}
-        isLoadingVersions={isLoadingVersions}
-        versions={versions}
-        handleLoadVersions={handleLoadVersions}
-        handleRestoreVersion={handleRestoreVersion}
-      />
+      {versionPanel}
 
       <SectionHeader title="Personal Information" open={openSections.personal} onToggle={() => toggleSection('personal')} />
       {openSections.personal && <div className="p-5 bg-white"><PersonalInfoForm data={resume.resumeData.personalInfo} onChange={resume.updatePersonalInfo} /></div>}
@@ -312,16 +225,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         </div>
       )}
 
-      <ChatPanel
-        chatOpen={chatOpen}
-        setChatOpen={setChatOpen}
-        chatMessages={chatMessages}
-        chatInput={chatInput}
-        setChatInput={setChatInput}
-        isChatLoading={isChatLoading}
-        chatEndRef={chatEndRef}
-        handleChatSend={handleChatSend}
-      />
+      {chatPanel}
 
       {isMobile && (
         <div style={{ position: 'sticky', bottom: 0, background: 'linear-gradient(to top, rgba(255,255,255,1) 70%, transparent)', padding: '12px 16px 20px', display: 'flex', justifyContent: 'flex-end' }}>

@@ -9,7 +9,9 @@ import OnboardingWizard from '../components/OnboardingWizard';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
 import { useAtsState } from '../features/ats/useAtsState';
+import AtsPanel from '../features/ats/AtsPanel';
 import { useChatState } from '../features/chat/useChatState';
+import ChatPanel from '../features/chat/ChatPanel';
 import DashboardTopBar from '../features/editor/DashboardTopBar';
 import EditorHeader from '../features/editor/EditorHeader';
 import EditorFormStack from '../features/editor/EditorFormStack';
@@ -26,6 +28,7 @@ import PreviewPanel from '../features/preview/PreviewPanel';
 import TemplateStrip from '../features/preview/TemplateStrip';
 import { getTemplateComponent } from '../features/preview/templateRegistry';
 import { useVersionState } from '../features/versioning/useVersionState';
+import { VersionHistoryPanel } from '../features/versioning/VersionPanel';
 import { useToasts } from '../hooks/useToasts';
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -242,6 +245,53 @@ export default function Dashboard() {
             />
 
             <EditorFormStack
+              atsPanel={
+                <AtsPanel
+                  openJD={openJD}
+                  setOpenJD={setOpenJD}
+                  jobDescription={jobDescription}
+                  setJobDescription={setJobDescription}
+                  atsScore={atsScore}
+                  atsMatched={atsMatched}
+                  atsMissing={atsMissing}
+                  atsRequiredMissing={atsRequiredMissing}
+                  atsPreferredMissing={atsPreferredMissing}
+                  atsRequiredMatched={atsRequiredMatched}
+                  atsPreferredMatched={atsPreferredMatched}
+                  atsSeniority={atsSeniority}
+                  atsExpYears={atsExpYears}
+                  showMatchedKeywords={showMatchedKeywords}
+                  setShowMatchedKeywords={setShowMatchedKeywords}
+                  isScoring={isScoring}
+                  handleScore={handleScore}
+                  isOptimizing={isOptimizing}
+                  handleOptimize={handleOptimize}
+                  appendMissingKeyword={appendMissingKeyword}
+                  resetAtsState={resetAtsState}
+                />
+              }
+              versionPanel={
+                <VersionHistoryPanel
+                  backendResumeId={backendResumeId}
+                  showVersions={showVersions}
+                  isLoadingVersions={isLoadingVersions}
+                  versions={versions}
+                  handleLoadVersions={handleLoadVersions}
+                  handleRestoreVersion={handleRestoreVersion}
+                />
+              }
+              chatPanel={
+                <ChatPanel
+                  chatOpen={chatOpen}
+                  setChatOpen={setChatOpen}
+                  chatMessages={chatMessages}
+                  chatInput={chatInput}
+                  setChatInput={setChatInput}
+                  isChatLoading={isChatLoading}
+                  chatEndRef={chatEndRef}
+                  handleChatSend={handleChatSend}
+                />
+              }
               openSections={openSections}
               toggleSection={toggleSection}
               resume={resume}
@@ -249,41 +299,6 @@ export default function Dashboard() {
               isRewritingSummary={isRewritingSummary}
               handleRewriteExperience={handleRewriteExperience}
               rewritingExperienceId={rewritingExperienceId}
-              openJD={openJD}
-              setOpenJD={setOpenJD}
-              jobDescription={jobDescription}
-              setJobDescription={setJobDescription}
-              atsScore={atsScore}
-              atsMatched={atsMatched}
-              atsMissing={atsMissing}
-              atsRequiredMissing={atsRequiredMissing}
-              atsPreferredMissing={atsPreferredMissing}
-              atsRequiredMatched={atsRequiredMatched}
-              atsPreferredMatched={atsPreferredMatched}
-              atsSeniority={atsSeniority}
-              atsExpYears={atsExpYears}
-              showMatchedKeywords={showMatchedKeywords}
-              setShowMatchedKeywords={setShowMatchedKeywords}
-              isScoring={isScoring}
-              handleScore={handleScore}
-              isOptimizing={isOptimizing}
-              handleOptimize={handleOptimize}
-              appendMissingKeyword={appendMissingKeyword}
-              resetAtsState={resetAtsState}
-              backendResumeId={backendResumeId}
-              showVersions={showVersions}
-              isLoadingVersions={isLoadingVersions}
-              versions={versions}
-              handleLoadVersions={handleLoadVersions}
-              handleRestoreVersion={handleRestoreVersion}
-              chatOpen={chatOpen}
-              setChatOpen={setChatOpen}
-              chatMessages={chatMessages}
-              chatInput={chatInput}
-              setChatInput={setChatInput}
-              isChatLoading={isChatLoading}
-              chatEndRef={chatEndRef}
-              handleChatSend={handleChatSend}
               isMobile={isMobile}
               setShowMobilePreview={setShowMobilePreview}
             />
