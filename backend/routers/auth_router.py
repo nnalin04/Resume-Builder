@@ -286,7 +286,10 @@ def verify_email(
     entry = get_otp_entry(current_user.id, db)
     if not entry:
         raise HTTPException(status_code=400, detail="No verification code found. Please request a new one.")
-    if datetime.now(timezone.utc) > entry["expires_at"]:
+    expires_at = entry["expires_at"]
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires_at:
         clear_otp(current_user.id, db)
         raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new one.")
     if not hmac.compare_digest(body.otp.strip(), entry["otp"]):

@@ -32,12 +32,13 @@ def _activate_plan(user: models.User, payment: models.Payment) -> None:
 
 def _is_free_tier(user: models.User) -> bool:
     if user.subscription_status == "ACTIVE":
-        if user.subscription_expiry:
-            expiry = user.subscription_expiry
-            if expiry.tzinfo is not None:
-                expiry = expiry.replace(tzinfo=None)
-            if expiry > datetime.utcnow():
-                return False
+        if user.subscription_expiry is None:
+            return False  # lifetime plan — no expiry means unlimited access
+        expiry = user.subscription_expiry
+        if expiry.tzinfo is not None:
+            expiry = expiry.replace(tzinfo=None)
+        if expiry > datetime.utcnow():
+            return False
     return True
 
 

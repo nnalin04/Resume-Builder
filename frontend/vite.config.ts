@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from "path"
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -18,6 +19,18 @@ export default defineConfig({
           if (id.includes('framer-motion')) return 'motion-vendor';
           return 'vendor';
         },
+      },
+    },
+  },
+  test: {
+    environment: 'happy-dom',
+    setupFiles: ['./src/test/setup.ts'],
+    globals: true,
+    server: {
+      deps: {
+        // Force vitest's ESM transformer to handle packages that use
+        // ESM-only sub-deps (e.g. jsdom → html-encoding-sniffer → @exodus/bytes)
+        inline: ['@exodus/bytes', 'html-encoding-sniffer'],
       },
     },
   },
