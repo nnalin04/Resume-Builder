@@ -1,4 +1,3 @@
-import React from 'react';
 import { type TemplateId } from '../../types/resumeTypes';
 import { TEMPLATES, TEMPLATE_COLORS, TemplateMiniPreview } from './TemplateMiniPreview';
 

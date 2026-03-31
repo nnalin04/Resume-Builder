@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function SectionHeader({ title, open, onToggle, badge }: { title: string; open: boolean; onToggle: () => void; badge?: string }) {
   return (
     <button
