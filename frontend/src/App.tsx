@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import LandingPage from './pages/LandingPage';
-import Dashboard from './pages/Dashboard';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import GoogleCallbackPage from './pages/GoogleCallbackPage';
-import PricingPage from './pages/PricingPage';
-import PaymentSuccessPage from './pages/PaymentSuccessPage';
-import CoverLetterPage from './pages/CoverLetterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import ProfilePage from './pages/ProfilePage';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const GoogleCallbackPage = lazy(() => import('./pages/GoogleCallbackPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
+const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage'));
+const CoverLetterPage = lazy(() => import('./pages/CoverLetterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // ─── Error Boundary ───────────────────────────────────────────────────────────
 
@@ -105,28 +106,34 @@ function AppRoutes() {
   const { loading } = useAuth();
 
   if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
-        <div style={{ color: '#94a3b8', fontSize: 15 }}>Loading…</div>
-      </div>
-    );
+    return <RouteLoadingState />;
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/editor" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-      <Route path="/cover-letter" element={<ProtectedRoute><CoverLetterPage /></ProtectedRoute>} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+    <Suspense fallback={<RouteLoadingState />}>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/editor" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/payment/success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+        <Route path="/cover-letter" element={<ProtectedRoute><CoverLetterPage /></ProtectedRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
+function RouteLoadingState() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+      <div style={{ color: '#94a3b8', fontSize: 15 }}>Loading…</div>
+    </div>
   );
 }
 
