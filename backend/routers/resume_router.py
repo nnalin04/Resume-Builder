@@ -3,7 +3,7 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
-from pydantic import BaseModel
+from schemas.resume_schemas import UpdateSectionsRequest, SaveVersionRequest
 from sqlalchemy.orm import Session
 
 import models
@@ -18,13 +18,6 @@ from services.serialization_service import _safe_json
 
 router = APIRouter()
 
-
-class UpdateSectionsRequest(BaseModel):
-    sections: dict
-
-
-class SaveVersionRequest(BaseModel):
-    name: str
 
 
 @router.get("/api/resumes")

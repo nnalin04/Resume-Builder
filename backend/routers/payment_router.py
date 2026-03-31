@@ -2,7 +2,7 @@ import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from pydantic import BaseModel
+from schemas.payment_schemas import CreateOrderRequest
 from sqlalchemy.orm import Session
 
 import models
@@ -14,10 +14,6 @@ from services.freemium_service import _activate_plan
 
 router = APIRouter()
 
-
-class CreateOrderRequest(BaseModel):
-    plan: str
-    return_url: str = "http://localhost:3000/payment/success"
 
 
 @router.post("/api/payments/create-order")

@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
-from pydantic import BaseModel
+from schemas.export_schemas import DirectExportRequest
 from sqlalchemy.orm import Session
 
 import models
@@ -18,10 +18,6 @@ from services.serialization_service import _safe_json
 
 router = APIRouter()
 
-
-class DirectExportRequest(BaseModel):
-    sections: dict
-    template: str = "classic"
 
 
 @router.get("/api/export/{resume_id}")
