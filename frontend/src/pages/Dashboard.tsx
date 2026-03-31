@@ -2,8 +2,9 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useResumeState } from '../hooks/useResumeState';
-import type { TemplateId, ResumeData } from '../types/resumeTypes';
+import type { TemplateId } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
+import { resumeDataToSections } from '../utils/sectionMappers';
 import OnboardingWizard from '../components/OnboardingWizard';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
@@ -26,54 +27,6 @@ import TemplateStrip from '../features/preview/TemplateStrip';
 import { getTemplateComponent } from '../features/preview/templateRegistry';
 import { useVersionState } from '../features/versioning/useVersionState';
 import { useToasts } from '../hooks/useToasts';
-
-// ─── Convert frontend ResumeData → backend sections format ───────────────────
-
-function resumeDataToSections(data: ResumeData): object {
-  return {
-    contact: {
-      name: data.personalInfo.name,
-      email: data.personalInfo.email,
-      phone: data.personalInfo.phone,
-      location: data.personalInfo.location,
-      linkedin: data.personalInfo.linkedin,
-      github: data.personalInfo.github,
-    },
-    summary: data.summary,
-    experience: data.experiences.map(e => ({
-      company: e.company,
-      title: e.position,
-      location: e.location,
-      start_date: e.startDate,
-      end_date: e.currentlyWorking ? 'Present' : e.endDate,
-      bullets: e.description ? e.description.split('\n').filter((b: string) => b.trim()) : [],
-    })),
-    education: data.education.map(e => ({
-      institution: e.institution,
-      degree: e.degree,
-      field: e.field,
-      graduation_date: e.year,
-      ...(e.start_year ? { start_year: e.start_year } : {}),
-    })),
-    skills: {
-      languages: [],
-      frameworks: [],
-      tools: [],
-      databases: [],
-      other: data.skills ? data.skills.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
-    },
-    projects: data.projects.map(p => ({
-      name: p.name,
-      description: p.description,
-      link: p.link,
-    })),
-    certifications: (data.certifications ?? []).map(c => ({
-      name: c.name,
-      issuer: c.issuer,
-      date: c.date,
-    })),
-  };
-}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
