@@ -3,10 +3,7 @@ import type { ReactNode, RefObject } from 'react';
 import PaginatedPreview, { PAGE_GAP } from '../../components/PaginatedPreview';
 import type { FontSize } from '../../utils/fontScales';
 import type { ResumeData, TemplateId } from '../../types/resumeTypes';
-
-
-const RESUME_W = 794;
-const RESUME_H = 1123;
+import { RESUME_W, RESUME_H } from '../../utils/templateConstants';
 
 interface PreviewPanelProps {
   template: TemplateId;
