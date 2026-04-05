@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
+import type { SkillTag } from '../../types/resumeTypes';
 
 import { DEFAULT_SKILL_CATEGORIES } from '../../utils/skillUtils';
+import SkillTagsInput from '../../components/SkillTagsInput';
 import PersonalInfoForm from '../../components/PersonalInfoForm';
 import SummaryForm from '../../components/SummaryForm';
 import ExperienceForm from '../../components/ExperienceForm';
@@ -87,10 +89,13 @@ export default function EditorFormStack(props: EditorFormStackProps) {
       {openSections.skills && (() => {
         const categorized = !!(resume.resumeData.skillCategories?.length);
         const cats = resume.resumeData.skillCategories ?? [];
+        // Derive skillTags from skills string if not yet set
+        const skillTags: SkillTag[] = resume.resumeData.skillTags ??
+          resume.resumeData.skills.split(',').map((s: string) => s.trim()).filter(Boolean).map((name: string) => ({ name }));
         return (
           <div className="p-5 bg-white">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <p className="text-xs text-slate-500 font-medium">{categorized ? 'Skills by category' : 'Comma-separated list of skills'}</p>
+              <p className="text-xs text-slate-500 font-medium">{categorized ? 'Skills by category' : 'Skill tags'}</p>
               <button
                 onClick={() => {
                   if (categorized) {
@@ -137,13 +142,9 @@ export default function EditorFormStack(props: EditorFormStackProps) {
                 ))}
               </div>
             ) : (
-              <textarea
-                className="w-full border border-slate-200 rounded-xl px-2.5 py-1.5 resize-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-shadow text-slate-800 placeholder-slate-400"
-                style={{ fontSize: 11 }}
-                rows={3}
-                value={resume.resumeData.skills}
-                onChange={(e) => resume.updateSkills(e.target.value)}
-                placeholder="Python 3.11, React 18, TypeScript 5, System Design..."
+              <SkillTagsInput
+                tags={skillTags}
+                onChange={resume.updateSkillTags}
               />
             )}
           </div>
