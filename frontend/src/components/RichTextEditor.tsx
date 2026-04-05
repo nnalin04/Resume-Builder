@@ -31,7 +31,11 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         if (event.key === 'Tab') {
           event.preventDefault();
           if (editor?.isActive('listItem')) {
-            editor.chain().focus().sinkListItem('listItem').run();
+            if (event.shiftKey) {
+              editor.chain().focus().liftListItem('listItem').run();
+            } else {
+              editor.chain().focus().sinkListItem('listItem').run();
+            }
           } else {
             editor?.chain().focus().insertContent('    ').run();
           }
