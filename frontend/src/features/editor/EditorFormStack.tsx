@@ -4,6 +4,8 @@ import { User, FileText, Wrench, Briefcase, FolderOpen, GraduationCap, Award, Pl
 
 import { DEFAULT_SKILL_CATEGORIES } from '../../utils/skillUtils';
 import SkillTagsInput from '../../components/SkillTagsInput';
+import SectionFeedback from '../../components/SectionFeedback';
+import { htmlToPlainLines } from '../../utils/htmlUtils';
 import PersonalInfoForm from '../../components/PersonalInfoForm';
 import SummaryForm from '../../components/SummaryForm';
 import ExperienceForm from '../../components/ExperienceForm';
@@ -61,7 +63,12 @@ export default function EditorFormStack(props: EditorFormStackProps) {
       {versionPanel}
 
       <SectionHeader title="Personal Information" subtitle="Your contact details and links" icon={<User size={15} />} open={openSections.personal} onToggle={() => toggleSection('personal')} status={getSectionStatus('personal', resume)} />
-      {openSections.personal && <div className="p-5 bg-white"><PersonalInfoForm data={resume.resumeData.personalInfo} onChange={resume.updatePersonalInfo} /></div>}
+      {openSections.personal && (
+        <div className="p-5 bg-white">
+          <SectionFeedback points={getPersonalFeedback(resume)} />
+          <PersonalInfoForm data={resume.resumeData.personalInfo} onChange={resume.updatePersonalInfo} />
+        </div>
+      )}
 
       <SectionHeader title="Professional Summary" subtitle="A concise pitch that opens your resume" icon={<FileText size={15} />} open={openSections.summary} onToggle={() => toggleSection('summary')} status={getSectionStatus('summary', resume)} />
       {openSections.summary && (
@@ -98,6 +105,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
           resume.resumeData.skills.split(',').map((s: string) => s.trim()).filter(Boolean).map((name: string) => ({ name }));
         return (
           <div className="p-5 bg-white">
+            <SectionFeedback points={getSkillsFeedback(resume)} />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
               <p className="text-xs text-slate-500 font-medium">{categorized ? 'Skills by category' : 'Skill tags'}</p>
               <button
@@ -158,6 +166,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
       <SectionHeader title="Work Experience" subtitle="Add details about jobs and internships" icon={<Briefcase size={15} />} open={openSections.experience} onToggle={() => toggleSection('experience')} status={getSectionStatus('experience', resume)} />
       {openSections.experience && (
         <div className="p-5 bg-white">
+          <SectionFeedback points={getExperienceFeedback(resume)} />
           <ExperienceForm
             experiences={resume.resumeData.experiences}
             onAdd={resume.addExperience}
@@ -172,6 +181,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
       <SectionHeader title="Projects" subtitle="Side projects, open source, hackathons" icon={<FolderOpen size={15} />} open={openSections.projects} onToggle={() => toggleSection('projects')} status={getSectionStatus('projects', resume)} />
       {openSections.projects && (
         <div className="p-5 bg-white">
+          <SectionFeedback points={getProjectsFeedback(resume)} />
           <ProjectsForm
             projects={resume.resumeData.projects}
             onAdd={resume.addProject}
@@ -289,6 +299,56 @@ function getSectionStatus(section: Section, resume: any): SectionStatus {
     default:
       return 'empty';
   }
+}
+
+function getPersonalFeedback(resume: any): string[] {
+  const tips: string[] = [];
+  const p = resume.resumeData.personalInfo;
+  if (!p.linkedin) tips.push('Add your LinkedIn URL — recruiters check it before scheduling interviews.');
+  if (!p.github) tips.push('Add your GitHub URL to showcase your code and projects.');
+  return tips;
+}
+
+function getSkillsFeedback(resume: any): string[] {
+  const tips: string[] = [];
+  const skills: string[] = resume.resumeData.skills.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
+  if (skills.length < 4) {
+    tips.push('Add at least 4–6 skills — ATS systems score based on keyword match rate.');
+  }
+  const allBullets = resume.resumeData.experiences
+    .flatMap((e: any) => htmlToPlainLines(e.description))
+    .join(' ')
+    .toLowerCase();
+  const orphanSkills = skills.filter(s => s.length > 2 && !allBullets.includes(s));
+  if (orphanSkills.length > 0) {
+    tips.push(`Skills listed but not mentioned in experience: ${orphanSkills.slice(0, 3).join(', ')}. Add them to a bullet for stronger ATS match.`);
+  }
+  return tips;
+}
+
+function getExperienceFeedback(resume: any): string[] {
+  const tips: string[] = [];
+  const allBullets = resume.resumeData.experiences.flatMap((e: any) => htmlToPlainLines(e.description));
+  if (allBullets.length === 0) return tips;
+  const withMetric = allBullets.filter((l: string) => /\d+[%$kKmMx]?|\d{2,}/.test(l)).length;
+  if (withMetric / allBullets.length < 0.5) {
+    tips.push('Less than half your bullets have numbers. Quantify impact: "Reduced latency by 40%" beats "Improved performance".');
+  }
+  const weakPhrases = ['responsible for', 'worked on', 'helped with', 'assisted in'];
+  const hasWeak = allBullets.some((l: string) => weakPhrases.some(p => l.toLowerCase().includes(p)));
+  if (hasWeak) {
+    tips.push('Replace weak phrases like "responsible for" or "worked on" with strong action verbs: Led, Built, Reduced, Increased.');
+  }
+  return tips;
+}
+
+function getProjectsFeedback(resume: any): string[] {
+  const tips: string[] = [];
+  const missingLink = resume.resumeData.projects.filter((p: any) => !p.hidden && !p.link);
+  if (missingLink.length > 0) {
+    tips.push(`${missingLink.length} project(s) have no link. Add a GitHub repo or live demo URL — it builds credibility.`);
+  }
+  return tips;
 }
 
 function SectionHeader({
