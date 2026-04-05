@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { SkillTag } from '../../types/resumeTypes';
+import { User, FileText, Wrench, Briefcase, FolderOpen, GraduationCap, Award, Plus } from 'lucide-react';
 
 import { DEFAULT_SKILL_CATEGORIES } from '../../utils/skillUtils';
 import SkillTagsInput from '../../components/SkillTagsInput';
@@ -59,10 +60,10 @@ export default function EditorFormStack(props: EditorFormStackProps) {
 
       {versionPanel}
 
-      <SectionHeader title="Personal Information" open={openSections.personal} onToggle={() => toggleSection('personal')} />
+      <SectionHeader title="Personal Information" subtitle="Your contact details and links" icon={<User size={15} />} open={openSections.personal} onToggle={() => toggleSection('personal')} status={getSectionStatus('personal', resume)} />
       {openSections.personal && <div className="p-5 bg-white"><PersonalInfoForm data={resume.resumeData.personalInfo} onChange={resume.updatePersonalInfo} /></div>}
 
-      <SectionHeader title="Professional Summary" open={openSections.summary} onToggle={() => toggleSection('summary')} />
+      <SectionHeader title="Professional Summary" subtitle="A concise pitch that opens your resume" icon={<FileText size={15} />} open={openSections.summary} onToggle={() => toggleSection('summary')} status={getSectionStatus('summary', resume)} />
       {openSections.summary && (
         <div className="p-5 bg-white">
           <SummaryForm
@@ -76,8 +77,11 @@ export default function EditorFormStack(props: EditorFormStackProps) {
 
       <SectionHeader
         title="Skills"
+        subtitle="Keywords ATS systems scan for"
+        icon={<Wrench size={15} />}
         open={openSections.skills}
         onToggle={() => toggleSection('skills')}
+        status={getSectionStatus('skills', resume)}
         badge={(() => {
           const cats = resume.resumeData.skillCategories;
           const count = cats?.length
@@ -151,7 +155,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         );
       })()}
 
-      <SectionHeader title="Work Experience" open={openSections.experience} onToggle={() => toggleSection('experience')} />
+      <SectionHeader title="Work Experience" subtitle="Add details about jobs and internships" icon={<Briefcase size={15} />} open={openSections.experience} onToggle={() => toggleSection('experience')} status={getSectionStatus('experience', resume)} />
       {openSections.experience && (
         <div className="p-5 bg-white">
           <ExperienceForm
@@ -165,7 +169,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         </div>
       )}
 
-      <SectionHeader title="Projects" open={openSections.projects} onToggle={() => toggleSection('projects')} />
+      <SectionHeader title="Projects" subtitle="Side projects, open source, hackathons" icon={<FolderOpen size={15} />} open={openSections.projects} onToggle={() => toggleSection('projects')} status={getSectionStatus('projects', resume)} />
       {openSections.projects && (
         <div className="p-5 bg-white">
           <ProjectsForm
@@ -177,7 +181,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         </div>
       )}
 
-      <SectionHeader title="Education" open={openSections.education} onToggle={() => toggleSection('education')} />
+      <SectionHeader title="Education" subtitle="Degrees, diplomas, and coursework" icon={<GraduationCap size={15} />} open={openSections.education} onToggle={() => toggleSection('education')} status={getSectionStatus('education', resume)} />
       {openSections.education && (
         <div className="p-5 bg-white border-b border-slate-100">
           <EducationForm
@@ -189,7 +193,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         </div>
       )}
 
-      <SectionHeader title="Certifications" open={openSections.certifications} onToggle={() => toggleSection('certifications')} />
+      <SectionHeader title="Certifications" subtitle="Licenses, badges, and credentials" icon={<Award size={15} />} open={openSections.certifications} onToggle={() => toggleSection('certifications')} />
       {openSections.certifications && (
         <div className="p-5 bg-white border-b border-transparent">
           <CertificationsForm
@@ -201,7 +205,7 @@ export default function EditorFormStack(props: EditorFormStackProps) {
         </div>
       )}
 
-      <SectionHeader title="Custom Sections" open={openSections.customSections} onToggle={() => toggleSection('customSections')} />
+      <SectionHeader title="Custom Sections" subtitle="Awards, publications, volunteer work, etc." icon={<Plus size={15} />} open={openSections.customSections} onToggle={() => toggleSection('customSections')} />
       {openSections.customSections && (
         <div className="p-5 bg-white border-b border-transparent">
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 11.5, color: '#166534', lineHeight: 1.5, marginBottom: 12 }}>
@@ -262,17 +266,70 @@ export default function EditorFormStack(props: EditorFormStackProps) {
   );
 }
 
-function SectionHeader({ title, open, onToggle, badge }: { title: string; open: boolean; onToggle: () => void; badge?: string }) {
+type SectionStatus = 'complete' | 'needs-work' | 'empty';
+
+function getSectionStatus(section: Section, resume: any): SectionStatus {
+  switch (section) {
+    case 'personal':
+      return (resume.resumeData.personalInfo.name && resume.resumeData.personalInfo.email) ? 'complete'
+        : resume.resumeData.personalInfo.name ? 'needs-work' : 'empty';
+    case 'summary':
+      return resume.resumeData.summary.length > 50 ? 'complete'
+        : resume.resumeData.summary.length > 0 ? 'needs-work' : 'empty';
+    case 'skills': {
+      const count = resume.resumeData.skills.split(',').filter((s: string) => s.trim()).length;
+      return count > 3 ? 'complete' : count > 0 ? 'needs-work' : 'empty';
+    }
+    case 'experience':
+      return resume.resumeData.experiences.length > 0 ? 'complete' : 'empty';
+    case 'projects':
+      return resume.resumeData.projects.length > 0 ? 'complete' : 'empty';
+    case 'education':
+      return resume.resumeData.education.length > 0 ? 'complete' : 'empty';
+    default:
+      return 'empty';
+  }
+}
+
+function SectionHeader({
+  title,
+  subtitle,
+  icon,
+  open,
+  onToggle,
+  badge,
+  status,
+}: {
+  title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  badge?: string;
+  status?: SectionStatus;
+}) {
   return (
     <button
       onClick={onToggle}
       className={`w-full flex items-center justify-between px-5 py-4 transition-colors ${open ? 'bg-surface-50 border-b border-slate-200' : 'bg-white hover:bg-slate-50 border-b border-slate-100'}`}
     >
-      <span className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-slate-700 tracking-tight">{title}</span>
-        {badge && <span className="text-xs text-slate-400 font-normal">{badge}</span>}
+      <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        {icon && <span style={{ color: '#94a3b8', flexShrink: 0, display: 'flex', alignItems: 'center' }}>{icon}</span>}
+        <span style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'flex-start', minWidth: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span className="text-sm font-semibold text-slate-700 tracking-tight">{title}</span>
+            {badge && <span className="text-xs text-slate-400 font-normal">{badge}</span>}
+            {status === 'complete' && (
+              <span style={{ fontSize: 10, fontWeight: 600, background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0', borderRadius: 20, padding: '1px 7px', whiteSpace: 'nowrap' as const }}>✓ Done</span>
+            )}
+            {status === 'needs-work' && (
+              <span style={{ fontSize: 10, fontWeight: 600, background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', borderRadius: 20, padding: '1px 7px', whiteSpace: 'nowrap' as const }}>Needs attention</span>
+            )}
+          </span>
+          {subtitle && <span style={{ fontSize: 10.5, color: '#94a3b8', fontWeight: 400, marginTop: 1 }}>{subtitle}</span>}
+        </span>
       </span>
-      <span className={`text-xs text-slate-400 transform transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>▼</span>
+      <span className={`text-xs text-slate-400 transform transition-transform duration-200 ${open ? 'rotate-180' : ''}`} style={{ flexShrink: 0, marginLeft: 8 }}>▼</span>
     </button>
   );
 }
