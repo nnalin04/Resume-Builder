@@ -1,4 +1,5 @@
 import type { Project } from '../types/resumeTypes';
+import RichTextEditor from './RichTextEditor';
 
 interface Props {
   projects: Project[];
@@ -9,7 +10,6 @@ interface Props {
 
 const inputCls = 'w-full border border-slate-200 rounded-lg px-2 py-0.5 text-[11px] bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
 const labelCls = 'block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide';
-const textareaCls = 'w-full border border-slate-200 rounded-lg px-2 py-1 text-[11px] resize-none bg-white outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-shadow placeholder-slate-400';
 
 export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Props) {
   return (
@@ -34,15 +34,12 @@ export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Pr
             <input className={inputCls} value={proj.name} onChange={e => onUpdate(proj.id, 'name', e.target.value)} placeholder="Project Name" />
           </div>
           <div className="mb-2">
-            <label className={labelCls}>
-              Description <span className="text-slate-400 normal-case tracking-normal font-normal">(one bullet per line)</span>
-            </label>
-            <textarea
-              className={textareaCls}
-              rows={3}
+            <label className={labelCls}>Description</label>
+            <RichTextEditor
               value={proj.description}
-              onChange={e => onUpdate(proj.id, 'description', e.target.value)}
-              placeholder={"What did you build?\nWhat tech did you use?"}
+              onChange={v => onUpdate(proj.id, 'description', v)}
+              placeholder="What did you build? What tech did you use?"
+              minHeight={90}
             />
           </div>
           <div>

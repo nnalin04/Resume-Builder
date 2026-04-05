@@ -1,6 +1,7 @@
 import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
+import { htmlToPlainLines } from '../utils/htmlUtils';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
 import { getSkillSections } from '../utils/skillUtils';
 
@@ -103,7 +104,7 @@ export default function TemplateTech({ data, fontSize = 'small' }: Props) {
                 <span style={{ fontSize: f(9.5), color: '#94a3b8', flexShrink: 0, fontFamily: 'monospace' }}>{e.startDate} – {e.currentlyWorking ? 'now' : e.endDate}</span>
               </div>
               <div style={{ fontSize: f(10.2), color: TEAL, fontWeight: 600, marginBottom: 4 }}>{e.company}{e.location ? ` · ${e.location}` : ''}</div>
-              {e.description && e.description.split('\n').filter(Boolean).map((line, j) => (
+              {e.description && htmlToPlainLines(e.description).map((line, j) => (
                 <div key={j} style={{ display: 'flex', gap: 6, marginBottom: 2, alignItems: 'flex-start' }}>
                   <span style={{ color: TEAL, fontWeight: 700, flexShrink: 0, fontSize: f(10.7), fontFamily: 'monospace' }}>→</span>
                   <span style={{ fontSize: f(10.5), lineHeight: 1.45, overflowWrap: 'break-word' as const, minWidth: 0 }}>{line}</span>

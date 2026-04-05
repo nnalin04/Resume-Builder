@@ -1,6 +1,7 @@
 import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
+import { htmlToLines } from '../utils/htmlUtils';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
 import { getSkillSections } from '../utils/skillUtils';
 
@@ -24,12 +25,22 @@ function ColHeader({ title, fm }: { title: string; fm: number }) {
 
 function ArrowBullets({ text, fm }: { text: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
+  const lines = htmlToLines(text);
+  if (!lines.length) return null;
   return (
     <>
-      {text.split('\n').filter(Boolean).map((line, i) => (
-        <div key={i} style={{ display: 'flex', gap: '5px', marginBottom: '3px', alignItems: 'flex-start' }}>
-          <span style={{ color: '#444', fontWeight: 400, flexShrink: 0, fontSize: f(11), lineHeight: 1.45, marginTop: '0px' }}>→</span>
-          <span style={{ fontSize: f(10.5), color: '#222', lineHeight: 1.45, overflowWrap: 'break-word' as const, minWidth: 0 }}>{line}</span>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: 'flex', gap: '5px', marginBottom: f(1.5), alignItems: 'flex-start', overflowWrap: 'break-word' as const, minWidth: 0 }}>
+          <span style={{ color: '#444', fontWeight: 400, flexShrink: 0, fontSize: f(11), lineHeight: 1.45, marginTop: f(1) }}>→</span>
+          <span style={{ fontSize: f(10.5), color: '#222', lineHeight: 1.45, flex: 1, minWidth: 0 }}>
+            {line.segments.map((seg, j) => (
+              <span key={j} style={{
+                fontWeight: seg.bold ? 700 : undefined,
+                fontStyle: seg.italic ? 'italic' as const : undefined,
+                textDecoration: [seg.underline && 'underline', seg.strike && 'line-through'].filter(Boolean).join(' ') || undefined,
+              }}>{seg.text}</span>
+            ))}
+          </span>
         </div>
       ))}
     </>
