@@ -65,6 +65,11 @@ export interface SkillCategory {
   skills: string; // comma-separated
 }
 
+export interface SkillTag {
+  name: string;
+  years?: number;
+}
+
 export interface ResumeData {
   personalInfo: PersonalInfo;
   summary: string;
@@ -73,6 +78,7 @@ export interface ResumeData {
   education: Education[];
   skills: string;
   skillCategories?: SkillCategory[]; // optional structured categories
+  skillTags?: SkillTag[]; // optional pill-tag input
   certifications: Certification[];
   customSections?: CustomSection[];
 }
