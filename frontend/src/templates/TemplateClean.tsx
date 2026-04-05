@@ -1,6 +1,7 @@
 import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
+import { htmlToLines } from '../utils/htmlUtils';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
 import { getSkillSections } from '../utils/skillUtils';
 
@@ -28,12 +29,22 @@ function SecHeader({ title, fm }: { title: string; fm: number }) {
 
 function BulletLines({ text, fm }: { text: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
+  const lines = htmlToLines(text);
+  if (!lines.length) return null;
   return (
     <>
-      {text.split('\n').filter(Boolean).map((line, i) => (
-        <div key={i} style={{ display: 'flex', gap: '0', marginBottom: '1.8px', alignItems: 'flex-start' }}>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: 'flex', gap: '0', marginBottom: f(1.5), alignItems: 'flex-start', overflowWrap: 'break-word' as const, minWidth: 0 }}>
           <span style={{ color: accent, fontWeight: 600, flexShrink: 0, fontSize: f(10.7), lineHeight: 1.36, paddingRight: '4px' }}>–</span>
-          <span style={{ fontSize: f(10.7), color: body, lineHeight: 1.36, overflowWrap: 'break-word' as const, minWidth: 0 }}>{line}</span>
+          <span style={{ fontSize: f(10.7), color: body, lineHeight: 1.36, flex: 1, minWidth: 0 }}>
+            {line.segments.map((seg, j) => (
+              <span key={j} style={{
+                fontWeight: seg.bold ? 700 : undefined,
+                fontStyle: seg.italic ? 'italic' as const : undefined,
+                textDecoration: [seg.underline && 'underline', seg.strike && 'line-through'].filter(Boolean).join(' ') || undefined,
+              }}>{seg.text}</span>
+            ))}
+          </span>
         </div>
       ))}
     </>

@@ -1,4 +1,5 @@
 import type { Project } from '../types/resumeTypes';
+import RichTextEditor from './RichTextEditor';
 
 interface Props {
   projects: Project[];
@@ -34,15 +35,12 @@ export default function ProjectsForm({ projects, onAdd, onUpdate, onRemove }: Pr
             <input className={inputCls} value={proj.name} onChange={e => onUpdate(proj.id, 'name', e.target.value)} placeholder="Project Name" />
           </div>
           <div className="mb-2">
-            <label className={labelCls}>
-              Description <span className="text-slate-400 normal-case tracking-normal font-normal">(one bullet per line)</span>
-            </label>
-            <textarea
-              className={textareaCls}
-              rows={3}
+            <label className={labelCls}>Description</label>
+            <RichTextEditor
               value={proj.description}
-              onChange={e => onUpdate(proj.id, 'description', e.target.value)}
-              placeholder={"What did you build?\nWhat tech did you use?"}
+              onChange={v => onUpdate(proj.id, 'description', v)}
+              placeholder="What did you build? What tech did you use?"
+              minHeight={90}
             />
           </div>
           <div>

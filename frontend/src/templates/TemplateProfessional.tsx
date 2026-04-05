@@ -1,6 +1,7 @@
 import type { ResumeData } from '../types/resumeTypes';
 import type { FontSize } from '../utils/fontScales';
 import { FONT_MULT } from '../utils/fontScales';
+import { htmlToLines } from '../utils/htmlUtils';
 import { IconGeoAlt, IconTelephone, IconEnvelope, IconLinkedin, IconGithub } from '../components/ContactIcons';
 import { getSkillSections } from '../utils/skillUtils';
 
@@ -26,12 +27,22 @@ function SideSection({ title, fm }: { title: string; fm: number }) {
 
 function BulletLines({ text, fm }: { text: string; fm: number }) {
   const f = (px: number) => Math.round(px * fm * 10) / 10;
+  const lines = htmlToLines(text);
+  if (!lines.length) return null;
   return (
     <>
-      {text.split('\n').filter(Boolean).map((line, i) => (
-        <div key={i} style={{ display: 'flex', gap: '5px', marginBottom: '2px', alignItems: 'flex-start' }}>
-          <span style={{ color: '#1e3a5f', fontWeight: 700, flexShrink: 0, fontSize: f(13.3), lineHeight: 1.2, marginTop: '1px' }}>›</span>
-          <span style={{ fontSize: f(10.7), color: '#1e293b', lineHeight: 1.4, overflowWrap: 'break-word' as const, minWidth: 0 }}>{line}</span>
+      {lines.map((line, i) => (
+        <div key={i} style={{ display: 'flex', gap: '5px', marginBottom: f(1.5), alignItems: 'flex-start', overflowWrap: 'break-word' as const, minWidth: 0 }}>
+          <span style={{ color: '#1e3a5f', fontWeight: 700, flexShrink: 0, fontSize: f(13.3), lineHeight: 1.2, marginTop: f(1) }}>›</span>
+          <span style={{ fontSize: f(10.7), color: '#1e293b', lineHeight: 1.4, flex: 1, minWidth: 0 }}>
+            {line.segments.map((seg, j) => (
+              <span key={j} style={{
+                fontWeight: seg.bold ? 700 : undefined,
+                fontStyle: seg.italic ? 'italic' as const : undefined,
+                textDecoration: [seg.underline && 'underline', seg.strike && 'line-through'].filter(Boolean).join(' ') || undefined,
+              }}>{seg.text}</span>
+            ))}
+          </span>
         </div>
       ))}
     </>

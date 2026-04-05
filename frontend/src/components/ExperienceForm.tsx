@@ -1,4 +1,6 @@
 import type { Experience } from '../types/resumeTypes';
+import RichTextEditor from './RichTextEditor';
+import { htmlToPlainLines } from '../utils/htmlUtils';
 
 interface Props {
   experiences: Experience[];
@@ -72,9 +74,9 @@ export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove,
           </label>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-               <label style={{...s.label, marginBottom: 0}}>Description <span style={{ color: '#9ca3af' }}>(one bullet per line)</span></label>
+               <label style={{...s.label, marginBottom: 0}}>Key Points</label>
                {onRewrite && (
-                 <button 
+                 <button
                    onClick={() => onRewrite(exp.id, exp.description)}
                    disabled={rewritingId === exp.id}
                    style={s.rewriteBtn}
@@ -83,15 +85,13 @@ export default function ExperienceForm({ experiences, onAdd, onUpdate, onRemove,
                  </button>
                )}
             </div>
-            <textarea
-              style={s.textarea}
-              rows={5}
+            <RichTextEditor
               value={exp.description}
-              onChange={e => onUpdate(exp.id, 'description', e.target.value)}
-              placeholder={"Bullet point 1\nBullet point 2\nBullet point 3"}
+              onChange={v => onUpdate(exp.id, 'description', v)}
+              placeholder="• Led X, resulting in Y..."
             />
             {(() => {
-              const bullets = exp.description.split('\n').filter(l => l.trim().length > 0);
+              const bullets = htmlToPlainLines(exp.description);
               if (bullets.length === 0) return null;
               const withMetric = bullets.filter(l => /\d+[%$kKmMx]?|\d{2,}/.test(l)).length;
               const pct = withMetric / bullets.length;
