@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const A4_H = 1123;
 const A4_W = 794;
+const PAGE_MARGIN = 28; // px: breathing room at bottom of page N and top of page N+1
 export const PAGE_GAP = 24; // exported so Dashboard can compute total height
 
 interface Props {
@@ -95,12 +96,15 @@ export default function PaginatedPreview({
       // Use class-based rects if available, otherwise fall back to direct children
       const rectsToUse = itemRects.length > 0 ? itemRects : childRects;
 
-      // Determine cut points — prefer cutting between items, not mid-item
+      // Determine cut points — prefer cutting between items, not mid-item.
+      // Reserve PAGE_MARGIN px at the bottom of each page so content never
+      // butts against the page edge.
+      const USABLE_H = A4_H - PAGE_MARGIN;
       const cuts: number[] = [0];
       let pageStart = 0;
 
-      while (pageStart + A4_H < totalH) {
-        const naturalEnd = pageStart + A4_H;
+      while (pageStart + USABLE_H < totalH) {
+        const naturalEnd = pageStart + USABLE_H;
         let bestCut = naturalEnd;
 
         // Find the first item that would be bisected at naturalEnd
@@ -169,8 +173,10 @@ export default function PaginatedPreview({
                 flexShrink: 0,
               }}
             >
-              {/* Shift template content so this page starts at startOffset */}
-              <div style={{ transform: `translateY(-${startOffset}px)` }}>
+              {/* Shift template content so this page starts at startOffset.
+                  On page 2+ pull back by PAGE_MARGIN so content starts with
+                  breathing room from the top edge. */}
+              <div style={{ transform: `translateY(-${pageIdx === 0 ? startOffset : startOffset - PAGE_MARGIN}px)` }}>
                 <Template data={data} fontSize={fontSize} />
               </div>
             </div>
